@@ -2,13 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug Pick-e (native, GDB)",
+      "name": "Debug Pick-e (direct binary + fixed CWD)",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/target/debug/pick-e",
       "args": [],
       "stopAtEntry": false,
-      "cwd": "${workspaceFolder}",
+      "cwd": "${workspaceFolder}/target/debug",
       "environment": [],
       "externalConsole": false,
       "MIMode": "gdb",

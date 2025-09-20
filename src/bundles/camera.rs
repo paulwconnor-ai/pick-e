@@ -3,11 +3,21 @@ use bevy::render::camera::{Camera, OrthographicProjection, Projection, ScalingMo
 
 use crate::constants::{LOGICAL_H, LOGICAL_W};
 
-pub fn camera_2d_bundle() -> impl Bundle {
+pub fn camera_2d_bundle() -> Camera2dBundle {
+    Camera2dBundle {
+        camera: Camera {
+            clear_color: ClearColorConfig::Custom(Color::rgb(1.0, 1.0, 1.0)),
+            ..default()
+        },
+        ..default()
+    }
+}
+
+/*pub fn camera_2d_bundle() -> impl Bundle {
     (
         Camera2d,
         Camera {
-            clear_color: ClearColorConfig::Custom(Color::srgb(1.0, 1.0, 1.0)),
+            clear_color: ClearColorConfig::Custom(Color::rgb(1.0, 1.0, 1.0)),
             ..default()
         },
         Projection::Orthographic(OrthographicProjection {
@@ -15,9 +25,9 @@ pub fn camera_2d_bundle() -> impl Bundle {
                 width: LOGICAL_W,
                 height: LOGICAL_H,
             },
-            ..OrthographicProjection::default_2d()
+            ..OrthographicProjection::default()
         }),
         Transform::default(),
         GlobalTransform::default(),
     )
-}
+}*/

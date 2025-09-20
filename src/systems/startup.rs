@@ -1,19 +1,14 @@
 use crate::bundles::camera::camera_2d_bundle;
+use crate::bundles::hero::hero_bundle;
+use bevy::log::info;
 use bevy::prelude::*;
+use std::env;
+use std::path::Path;
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    info!("Running from {:?}", env::current_dir().unwrap());
+
+    info!("📷 Spawning camera...");
     commands.spawn(camera_2d_bundle());
-
-    commands.spawn((
-        Sprite {
-            color: Color::srgb_u8(201, 230, 240),
-            custom_size: Some(Vec2::new(50.0, 50.0)),
-            ..default()
-        },
-        Transform::from_xyz(0.0, 0.0, 0.0),
-        GlobalTransform::default(),
-        Visibility::Visible,
-        InheritedVisibility::default(),
-        ViewVisibility::default(),
-    ));
+    commands.spawn(hero_bundle(&asset_server));
 }
