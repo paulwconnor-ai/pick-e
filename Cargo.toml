@@ -8,11 +8,8 @@ crate-type = ["cdylib"]
 
 [dependencies]
 bevy = { version = "0.13", default-features = false, features = ["webgl2"] }
+wasm-bindgen = "0.2"
+console_error_panic_hook = "0.1"
+getrandom = { version = "0.3", features = ["wasm_js"] }
+uuid = { version = "1.8.1", features = ["js"] }
 
-[dependencies.getrandom]
-version = "0.3"
-features = ["wasm_js"]
-
-[dependencies.uuid]
-version = "1.8.1"
-features = ["js"]

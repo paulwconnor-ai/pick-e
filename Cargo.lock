@@ -2024,8 +2024,10 @@ name = "pick-e"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "console_error_panic_hook",
  "getrandom 0.3.3",
  "uuid",
+ "wasm-bindgen",
 ]
 
 [[package]]
