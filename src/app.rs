@@ -2,6 +2,7 @@ use bevy::asset::AssetPlugin;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
+use crate::systems::movement::keyboard_control_system;
 use crate::systems::startup::setup;
 
 pub fn build_app() -> App {
@@ -23,5 +24,9 @@ pub fn build_app() -> App {
     // add our startup system:
     app.add_systems(Startup, setup);
 
+    // keyboard controls:
+    app.add_systems(Update, keyboard_control_system);
+
+    // return (no semicolon!)
     app
 }

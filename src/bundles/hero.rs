@@ -36,7 +36,7 @@ fn physics_bundle() -> impl Bundle {
         RigidBody::Dynamic,
         Collider::ball(HERO_RADIUS),
         Velocity::default(), // You can modify velocity via system each frame
-        LockedAxes::ROTATION_LOCKED, // Prevent spinning
+        // Allow rotation — we control it ourselves via angvel
         Damping {
             linear_damping: 2.0,
             angular_damping: 2.0,
