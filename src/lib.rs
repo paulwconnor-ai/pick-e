@@ -3,22 +3,29 @@
 use bevy::log::info;
 use bevy::prelude::*;
 use bevy::render::camera::{OrthographicProjection, Projection, ScalingMode};
+
+pub const LOGICAL_W: f32 = 1280.0;
+pub const LOGICAL_H: f32 = 720.0;
+
+#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-const LOGICAL_W: f32 = 1280.0;
-const LOGICAL_H: f32 = 720.0;
-
+#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(start)]
 pub fn start() {
-    // Show Rust panics in the browser console
+    real_start();
+}
+
+pub fn real_start() {
+    // Show panics and logs
+    #[cfg(target_arch = "wasm32")]
     console_error_panic_hook::set_once();
 
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                // Use your HTML canvas (index.html should have: <canvas id="bevy-canvas"></canvas>)
                 canvas: Some("#bevy-canvas".into()),
-                fit_canvas_to_parent: true, // let CSS parent control size
+                fit_canvas_to_parent: true,
                 ..default()
             }),
             ..default()
@@ -28,9 +35,8 @@ pub fn start() {
 }
 
 fn setup(mut commands: Commands) {
-    info!("Pick.e (camera-fixed world) starting…");
+    info!("Pick.e starting (logical size {LOGICAL_W}×{LOGICAL_H})");
 
-    // 2D camera with white clear color and a FIXED logical extent of 800x600.
     commands.spawn((
         Camera2d,
         Camera {
@@ -48,10 +54,7 @@ fn setup(mut commands: Commands) {
         GlobalTransform::default(),
     ));
 
-    // Demo geometry: a light-blue square (100x100 logical units) at the origin.
-    // (Using SpriteBundle here to avoid mesh feature churn; easy to swap later.)
     commands.spawn((
-        // Colored, untextured quad (100x100 logical units)
         Sprite {
             color: Color::srgb_u8(201, 230, 240),
             custom_size: Some(Vec2::new(50.0, 50.0)),

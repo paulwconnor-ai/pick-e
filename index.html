@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <title>Pick.e Demo</title>
+    <link data-trunk rel="rust" data-target-name="pick_e" />
     <style>
       body {
         margin: 0;
@@ -15,7 +16,7 @@
 
       .app-container {
         aspect-ratio: 16 / 9;
-        width: 90vw;       /* Base size on width instead of vmin */
+        max-width: 90vw;       /* Base size on width instead of vmin */
         height: auto;
         max-height: 90vh;
         border: 3px solid rgb(201, 230, 240);
@@ -35,6 +36,5 @@
     <div class="app-container">
       <canvas id="bevy-canvas"></canvas>
     </div>
-    <link data-trunk rel="rust" href="Cargo.toml" />
   </body>
 </html>
