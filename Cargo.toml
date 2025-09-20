@@ -7,7 +7,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-bevy = { version = "0.13", default-features = false, features = [
+bevy = { version = "0.16.1", default-features = false, features = [
     "webgl2",
     "bevy_winit",
     "bevy_sprite",
@@ -16,7 +16,8 @@ bevy = { version = "0.13", default-features = false, features = [
     "bevy_core_pipeline",
     "bevy_pbr",
     "bevy_text",
-    "bevy_ui"
+    "bevy_ui",
+    "bevy_log" 
 ] }
 
 wasm-bindgen = "0.2"

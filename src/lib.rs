@@ -1,18 +1,22 @@
+use bevy::log::info;
 use bevy::math::primitives::Circle;
 use bevy::prelude::*;
-use bevy::render::camera::ClearColorConfig;
 use bevy::render::mesh::Mesh;
-use bevy::sprite::MaterialMesh2dBundle;
-
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(start)]
 pub fn start() {
-    // Show panics in the browser console
     console_error_panic_hook::set_once();
 
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                canvas: Some("#bevy-canvas".into()), // now it's targeting the actual canvas
+                fit_canvas_to_parent: true,
+                ..default()
+            }),
+            ..default()
+        }))
         .add_systems(Startup, setup)
         .run();
 }
@@ -24,23 +28,22 @@ fn setup(
 ) {
     info!("Pick.e getting set up...");
 
-    // Camera with a white clear-colour
-    commands.spawn(Camera2dBundle {
-        camera: Camera {
-            clear_color: ClearColorConfig::Custom(Color::rgb(1.0, 1.0, 1.0)),
+    // Camera: bundles are deprecated in 0.16; use components.
+    commands.spawn((
+        Camera2d,
+        Camera {
+            clear_color: ClearColorConfig::Custom(Color::srgb(1.0, 1.0, 1.0)),
             ..default()
         },
-        ..default()
-    });
+    ));
 
-    // Circle (explicit type)
-    let mesh = meshes.add(Mesh::from(Circle::new(50.0)));
-    let material = materials.add(ColorMaterial::from(Color::rgb_u8(201, 230, 240)));
+    // Circle: use Mesh2d + MeshMaterial2d components (no MaterialMesh2dBundle in 0.16).
+    let mesh_handle = meshes.add(Mesh::from(Circle::new(50.0)));
+    let mat_handle = materials.add(ColorMaterial::from(Color::srgb_u8(201, 230, 240)));
 
-    commands.spawn(MaterialMesh2dBundle {
-        mesh: mesh.into(),
-        material,
-        transform: Transform::from_xyz(0.0, 0.0, 0.0),
-        ..default()
-    });
+    commands.spawn((
+        Mesh2d(mesh_handle),
+        MeshMaterial2d(mat_handle),
+        Transform::from_xyz(0.0, 0.0, 0.0),
+    ));
 }
