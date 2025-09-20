@@ -1,0 +1,17 @@
+// .vscode/tasks.json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-native",
+      "type": "shell",
+      "command": "./launch_native.sh",
+      "args": ["--build-only"],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
