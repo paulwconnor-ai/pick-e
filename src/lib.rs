@@ -1,6 +1,7 @@
 use bevy::log::info;
 use bevy::math::primitives::Circle;
 use bevy::prelude::*;
+use bevy::render::camera::{Projection, ScalingMode};
 use bevy::render::mesh::Mesh;
 use wasm_bindgen::prelude::*;
 
@@ -11,7 +12,7 @@ pub fn start() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                canvas: Some("#bevy-canvas".into()), // now it's targeting the actual canvas
+                canvas: Some("#bevy-canvas".into()),
                 fit_canvas_to_parent: true,
                 ..default()
             }),
@@ -28,16 +29,25 @@ fn setup(
 ) {
     info!("Pick.e getting set up...");
 
-    // Camera: bundles are deprecated in 0.16; use components.
+    let logical_width = 800.0;
+    let logical_height = 600.0;
+
     commands.spawn((
-        Camera2d,
         Camera {
             clear_color: ClearColorConfig::Custom(Color::srgb(1.0, 1.0, 1.0)),
             ..default()
         },
+        Projection::Orthographic(OrthographicProjection {
+            scaling_mode: ScalingMode::Fixed {
+                width: logical_width,
+                height: logical_height,
+            },
+            ..OrthographicProjection::default_2d()
+        }),
+        Transform::from_xyz(0.0, 0.0, 999.0),
+        GlobalTransform::default(),
     ));
 
-    // Circle: use Mesh2d + MeshMaterial2d components (no MaterialMesh2dBundle in 0.16).
     let mesh_handle = meshes.add(Mesh::from(Circle::new(50.0)));
     let mat_handle = materials.add(ColorMaterial::from(Color::srgb_u8(201, 230, 240)));
 
