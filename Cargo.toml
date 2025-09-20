@@ -1,6 +1,18 @@
 [package]
 name = "pick-e"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
 
 [dependencies]
+bevy = { version = "0.13", default-features = false, features = ["webgl2"] }
+
+[dependencies.getrandom]
+version = "0.3"
+features = ["wasm_js"]
+
+[dependencies.uuid]
+version = "1.8.1"
+features = ["js"]

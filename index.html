@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Pick-e Hello</title>
+</head>
+<body>
+  <h1>Check the console!</h1>
+  <script>
+    async function runWasm() {
+      const response = await fetch('pick_e.wasm');
+      const bytes = await response.arrayBuffer();
+      const { instance } = await WebAssembly.instantiate(bytes);
+      instance.exports.greet();
+      console.log("WASM greet() called successfully!");
+    }
+
+    runWasm();
+  </script>
+</body>
+</html>
