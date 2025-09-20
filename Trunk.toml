@@ -1,0 +1,9 @@
+# Trunk.toml
+
+# [build]
+# target = "wasm32-unknown-unknown"
+
+[tools.wasm-bindgen]
+version = "system"
+wasm-opt = false
+args = ["--no-typescript", "--no-modules"]

@@ -1,1 +1,1 @@
-trunk serve
+trunk serve -v
