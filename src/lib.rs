@@ -16,5 +16,6 @@ pub fn real_start() {
 
 mod app;
 mod bundles;
+mod components;
 mod constants;
 mod systems;
