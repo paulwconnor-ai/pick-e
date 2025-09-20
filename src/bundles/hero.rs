@@ -29,7 +29,7 @@ fn sprite_bundle(asset_server: &AssetServer) -> SpriteBundle {
             custom_size: Some(HERO_SIZE),
             ..default()
         },
-        transform: Transform::from_xyz(0.0, 0.0, 0.0),
+        transform: Transform::from_xyz(0.0, 200.0, 0.0),
         ..default()
     }
 }
