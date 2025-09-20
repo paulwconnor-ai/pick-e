@@ -7,9 +7,21 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-bevy = { version = "0.13", default-features = false, features = ["webgl2"] }
+bevy = { version = "0.13", default-features = false, features = [
+    "webgl2",
+    "bevy_winit",
+    "bevy_sprite",
+    "bevy_render",
+    "bevy_asset",
+    "bevy_core_pipeline",
+    "bevy_pbr",
+    "bevy_text",
+    "bevy_ui"
+] }
+
 wasm-bindgen = "0.2"
 console_error_panic_hook = "0.1"
-getrandom = { version = "0.3", features = ["wasm_js"] }
 uuid = { version = "1.8.1", features = ["js"] }
+getrandom = { version = "0.3", features = ["wasm_js"] }
+
 

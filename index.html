@@ -2,10 +2,25 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Pick-e Bevy</title>
+    <title>Pick.e Demo</title>
+    <style>
+      body {
+        margin: 0;
+        background: #ffffff; /* keep page background dark if you like */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      canvas {
+        width: 90vw !important;
+        height: 90vh !important;
+        border: 3px solid rgb(201, 230, 240); /* styles apply to Bevy's auto canvas */
+        border-radius: 10px;
+      }
+    </style>
   </head>
   <body>
-    <canvas id="bevy-canvas"></canvas>
     <link data-trunk rel="rust" href="Cargo.toml" />
   </body>
 </html>

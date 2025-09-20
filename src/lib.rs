@@ -1,21 +1,46 @@
+use bevy::math::primitives::Circle;
 use bevy::prelude::*;
+use bevy::render::camera::ClearColorConfig;
+use bevy::render::mesh::Mesh;
+use bevy::sprite::MaterialMesh2dBundle;
 
-// Only include wasm_bindgen when targeting the browser
-#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
-pub fn main() {
-    // Set up panic logging in the browser console
-    #[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(start)]
+pub fn start() {
+    // Show panics in the browser console
     console_error_panic_hook::set_once();
 
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_systems(Startup, hello)
+        .add_systems(Startup, setup)
         .run();
 }
 
-fn hello() {
-    bevy::log::info!("Hello from Bevy in WASM!");
+fn setup(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    info!("Pick.e getting set up...");
+
+    // Camera with a custom clear color (mid/dark grey)
+    commands.spawn(Camera2dBundle {
+        camera: Camera {
+            clear_color: ClearColorConfig::Custom(Color::rgb(1.0, 1.0, 1.0)),
+            ..default()
+        },
+        ..default()
+    });
+
+    // Circle (explicit type)
+    let mesh = meshes.add(Mesh::from(Circle::new(100.0)));
+    let material = materials.add(ColorMaterial::from(Color::ORANGE_RED));
+
+    commands.spawn(MaterialMesh2dBundle {
+        mesh: mesh.into(),
+        material,
+        transform: Transform::from_xyz(0.0, 0.0, 0.0),
+        ..default()
+    });
 }
