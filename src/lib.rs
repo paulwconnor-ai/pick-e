@@ -24,7 +24,7 @@ fn setup(
 ) {
     info!("Pick.e getting set up...");
 
-    // Camera with a custom clear color (mid/dark grey)
+    // Camera with a white clear-colour
     commands.spawn(Camera2dBundle {
         camera: Camera {
             clear_color: ClearColorConfig::Custom(Color::rgb(1.0, 1.0, 1.0)),
@@ -34,8 +34,8 @@ fn setup(
     });
 
     // Circle (explicit type)
-    let mesh = meshes.add(Mesh::from(Circle::new(100.0)));
-    let material = materials.add(ColorMaterial::from(Color::ORANGE_RED));
+    let mesh = meshes.add(Mesh::from(Circle::new(50.0)));
+    let material = materials.add(ColorMaterial::from(Color::rgb_u8(201, 230, 240)));
 
     commands.spawn(MaterialMesh2dBundle {
         mesh: mesh.into(),
