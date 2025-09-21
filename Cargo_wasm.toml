@@ -18,5 +18,5 @@ console_error_panic_hook = "0.1"
 uuid = { version = "1.8.1", features = ["js"] }
 getrandom = { version = "0.3", features = ["wasm_js"] }
 image = "0.24"
-
+rand = "0.8"
 
