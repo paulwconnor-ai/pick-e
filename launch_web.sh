@@ -8,7 +8,7 @@ cp .cargo/config_wasm.toml .cargo/config.toml
 
 # Build the app
 echo "🚀 Building WASM build..."
-trunk build --release
+trunk build
 
 # Run the app
 echo "🚀 Launching WASM build..."

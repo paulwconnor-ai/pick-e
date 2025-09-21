@@ -1,2 +1,6 @@
 [build]
 rustflags = ["--cfg", "getrandom_backend=\"wasm_js\""]
+
+[profile.dev]
+debug = 2
+opt-level = 1

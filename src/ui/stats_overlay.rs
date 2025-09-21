@@ -40,8 +40,7 @@ fn setup_top_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
                     align_items: AlignItems::Center,
                     ..default()
                 },
-                // darker but a bit more see-through than the perf panel
-                background_color: Color::rgba(0.03, 0.03, 0.06, 0.55).into(),
+                background_color: Color::rgba(1.0, 1.0, 1.0, 0.3).into(),
                 ..default()
             },
             Name::new("TopHUD"),
@@ -56,8 +55,7 @@ fn setup_top_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
                             TextStyle {
                                 font,
                                 font_size: 28.0, // big, readable
-                                // slightly tinted, not pure white
-                                color: Color::rgb(0.92, 0.95, 1.0),
+                                color: Color::rgb(0.1, 0.1, 0.4),
                             },
                         )],
                         justify: JustifyText::Center,
@@ -111,7 +109,7 @@ fn setup_stats_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                     align_items: AlignItems::FlexStart,
                     ..default()
                 },
-                background_color: Color::rgba(0.05, 0.05, 0.10, 0.70).into(),
+                background_color: Color::rgba(1.0, 1.0, 1.0, 0.3).into(),
                 ..default()
             },
             Name::new("StatsOverlay"),
@@ -126,7 +124,7 @@ fn setup_stats_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                             TextStyle {
                                 font,
                                 font_size: 16.0,
-                                color: Color::rgba(0.88, 0.90, 0.96, 0.95),
+                                color: Color::rgb(0.1, 0.1, 0.4),
                             },
                         )],
                         justify: bevy::text::JustifyText::Left,
