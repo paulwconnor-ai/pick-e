@@ -20,6 +20,7 @@ bevy = { version = "0.13.2", default-features = false, features = [
 ] }
 
 bevy_rapier2d = "0.25"
+bevy_embedded_assets = "0.10"
 
 wasm-bindgen = "0.2"
 console_error_panic_hook = "0.1"

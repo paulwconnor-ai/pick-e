@@ -3,12 +3,12 @@ name = "pick-e"
 version = "0.1.0"
 edition = "2021"
 
-[[bin]]
-name = "pick-e"
-path = "src/main.rs"
+[lib]
+crate-type = ["cdylib"]
 
 [dependencies]
 bevy = { version = "0.13.2", default-features = false, features = [
+    "webgl2",
     "bevy_winit",
     "bevy_sprite",
     "bevy_render",
@@ -16,14 +16,16 @@ bevy = { version = "0.13.2", default-features = false, features = [
     "bevy_core_pipeline",
     "bevy_text",
     "bevy_ui",
-    "x11",
     "png" 
 ] }
 
-# This version of Rapier is designed for Bevy 0.13
 bevy_rapier2d = "0.25"
+bevy_embedded_assets = "0.10"
 
-# Other dependencies
-uuid = "1.8.1"
+wasm-bindgen = "0.2"
 console_error_panic_hook = "0.1"
+uuid = { version = "1.8.1", features = ["js"] }
+getrandom = { version = "0.3", features = ["wasm_js"] }
 image = "0.24"
+
+

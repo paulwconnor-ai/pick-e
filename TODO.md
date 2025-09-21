@@ -45,6 +45,8 @@ Fulfills Locus's requirement for evaluating simulation accuracy and performance.
 - Goal-tile marker and auto-drive toward it
 - **Browser-deployable build using WebAssembly**
 - **Live deployment via AWS S3 + CloudFront for public access**
+- look at generating collision-cache instead from high-res "beauty" image - using "blueness" to detect the walls - might give better results than low-res mask
+- tidy up presentation of beauty image
 
 ---
 
