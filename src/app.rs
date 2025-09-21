@@ -1,5 +1,6 @@
 use bevy::asset::{AssetMode, AssetPlugin};
 use bevy::prelude::*;
+use bevy::window::{Window, WindowPlugin};
 use bevy_rapier2d::prelude::*;
 
 use crate::systems::level::{setup_level_loading, spawn_level};
@@ -18,9 +19,18 @@ pub fn build_app() -> App {
         ..default()
     };
 
+    let window_plugin = WindowPlugin {
+        primary_window: Some(Window {
+            canvas: Some("#bevy-canvas".into()),
+            ..default()
+        }),
+        ..default() // ← no fit_canvas_to_parent!
+    };
+
     let plugins = DefaultPlugins
         .set(ImagePlugin::default_nearest())
-        .set(asset_plugin);
+        .set(asset_plugin)
+        .set(window_plugin);
 
     app.add_plugins(plugins);
 
