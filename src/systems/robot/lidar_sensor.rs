@@ -28,12 +28,19 @@ pub fn lidar_sensor_system(
             let angle_rad = angle.to_radians();
             let dir = Vec2::new(angle_rad.cos(), angle_rad.sin());
 
+            use bevy_rapier2d::geometry::{CollisionGroups, Group};
+
             let ray_result = rapier_context.cast_ray(
                 origin,
                 dir,
                 LIDAR_MAX_RANGE_PX,
                 true,
-                QueryFilter::default().exclude_collider(entity),
+                QueryFilter::default()
+                    .exclude_collider(entity)
+                    .groups(CollisionGroups::new(
+                        Group::ALL,
+                        Group::ALL ^ Group::GROUP_2,
+                    )),
             );
 
             let distance = match ray_result {

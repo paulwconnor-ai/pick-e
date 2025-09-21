@@ -4,8 +4,9 @@ use bevy::window::{Window, WindowPlugin};
 use bevy_rapier2d::prelude::*;
 
 use crate::components::collectible::CollectionStats;
-use crate::systems::collectibles::collect_on_collision;
-use crate::systems::collectibles::spawn_collectibles;
+use crate::systems::collectibles::{
+    collect_on_collision, flood_spawn_collectibles_from_map, CollectibleFloodState,
+};
 use crate::systems::level::{setup_level_loading, spawn_level};
 use crate::systems::robot::cmd_vel_drive::cmd_vel_to_velocity_system;
 use crate::systems::robot::input_keyboard::keyboard_control_system;
@@ -14,12 +15,13 @@ use crate::systems::robot::occupancy_grid::{
     draw_occupancy_grid_system, update_occupancy_grid_system,
 };
 use crate::systems::startup::setup;
+use crate::ui::stats_overlay::StatsOverlayPlugin;
 
 pub fn build_app() -> App {
     let mut app = App::new();
 
-    // Use Unprocessed mode for direct asset loading (native or WASM via Trunk)
-    let asset_plugin: AssetPlugin = AssetPlugin {
+    // Asset and window plugins
+    let asset_plugin = AssetPlugin {
         file_path: "assets".into(),
         mode: AssetMode::Unprocessed,
         watch_for_changes_override: Some(false),
@@ -31,7 +33,7 @@ pub fn build_app() -> App {
             canvas: Some("#bevy-canvas".into()),
             ..default()
         }),
-        ..default() // ← no fit_canvas_to_parent!
+        ..default()
     };
 
     let plugins = DefaultPlugins
@@ -41,20 +43,30 @@ pub fn build_app() -> App {
 
     app.add_plugins(plugins);
 
-    // Physics setup
+    app.add_plugins(StatsOverlayPlugin);
+
+    // Physics
     app.insert_resource(RapierConfiguration {
         gravity: Vec2::ZERO,
         ..default()
     });
     app.add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0));
 
-    // Game systems
+    // Game setup systems (run once at startup)
     app.add_systems(Startup, setup);
+
+    // In Startup:
     app.add_systems(Startup, setup_level_loading);
+
+    // In Update:
     app.add_systems(Update, spawn_level);
+    app.add_systems(Update, flood_spawn_collectibles_from_map.after(spawn_level));
+
+    // Player input + movement
     app.add_systems(Update, keyboard_control_system);
     app.add_systems(Update, cmd_vel_to_velocity_system);
 
+    // Sensors
     app.add_systems(
         Update,
         (
@@ -63,6 +75,7 @@ pub fn build_app() -> App {
         ),
     );
 
+    // Occupancy grid
     app.add_systems(
         Update,
         (
@@ -71,10 +84,10 @@ pub fn build_app() -> App {
         ),
     );
 
+    // Collectibles: counter + collision detection
     app.insert_resource(CollectionStats::default());
     app.add_systems(Update, collect_on_collision);
-
-    app.add_systems(Startup, spawn_collectibles);
+    app.insert_resource(CollectibleFloodState::default());
 
     app
 }

@@ -106,11 +106,7 @@ fn try_load_collision_cache(_path: &str) -> Option<String> {
     }
 }
 
-fn try_spawn_from_cache(
-    commands: &mut Commands,
-    text: &str,
-    beauty: &Image
-) -> Option<()> {
+fn try_spawn_from_cache(commands: &mut Commands, text: &str, beauty: &Image) -> Option<()> {
     let tile_size = DOWNSCALE_FACTOR as f32;
     let origin_offset = compute_origin_offset(beauty, tile_size);
 
@@ -148,7 +144,7 @@ pub fn compute_origin_offset(image: &Image, tile_size: f32) -> Vec2 {
 const BLUE_DOMINANCE_RATIO: f32 = 1.25;
 const MIN_ALPHA: u8 = 8;
 
-fn is_clearly_blue(r: u8, g: u8, b: u8, a: u8) -> bool {
+pub fn is_clearly_blue(r: u8, g: u8, b: u8, a: u8) -> bool {
     if a < MIN_ALPHA {
         return false;
     }

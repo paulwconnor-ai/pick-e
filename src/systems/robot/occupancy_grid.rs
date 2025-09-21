@@ -38,10 +38,7 @@ pub fn update_occupancy_grid_system(
                     }
                 // Else: we don't assume anything — not Solid, not Free
                 } else {
-                    // Only mark as free if not already known to be solid
-                    if grid.get(x, y).unwrap_or(CellState::Unknown) != CellState::Solid {
-                        grid.set(x, y, CellState::Free);
-                    }
+                    grid.set(x, y, CellState::Free);
                 }
             }
         }
@@ -68,8 +65,8 @@ pub fn draw_occupancy_grid_system(mut gizmos: Gizmos, query: Query<&OccupancyGri
                 );
 
                 let color = match state {
-                    CellState::Free => Color::rgba(0.3, 1.0, 0.3, 0.15), // green
-                    CellState::Solid => Color::rgba(1.0, 0.2, 0.2, 0.25), // red
+                    CellState::Free => Color::rgba(0.1, 1.0, 0.1, 0.2), // green
+                    CellState::Solid => Color::rgba(1.0, 0.0, 0.0, 0.8), // red
                     CellState::Unknown => continue,
                 };
 
