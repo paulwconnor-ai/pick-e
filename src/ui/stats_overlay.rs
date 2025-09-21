@@ -161,9 +161,6 @@ fn update_stats_text(
     let mut text = query.single_mut();
     text.sections[0].value = format!(
         "Perf/Sim\n  Frame time: {:.1}ms   FPS: {:.0}\n  Sim time: {:02}:{:02}",
-        1000.0 * frame_time,
-        fps,
-        minutes,
-        seconds,
+        frame_time, fps, minutes, seconds,
     );
 }
