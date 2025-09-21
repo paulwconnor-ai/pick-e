@@ -5,8 +5,13 @@ set -e
 echo "⏳ Switching to WASM config..."
 cp Cargo_wasm.toml Cargo.toml
 cp .cargo/config_wasm.toml .cargo/config.toml
-# cp -r assets target/wasm32-unknown-unknown/debug/
+
+# Build the app
+echo "🚀 Building WASM build..."
+trunk build --release
 
 # Run the app
 echo "🚀 Launching WASM build..."
-trunk serve
+cd dist
+python3 -m http.server 8080
+

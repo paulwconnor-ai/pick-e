@@ -1,6 +1,5 @@
 use bevy::asset::{AssetMode, AssetPlugin};
 use bevy::prelude::*;
-use bevy_embedded_assets::EmbeddedAssetPlugin;
 use bevy_rapier2d::prelude::*;
 
 use crate::systems::level::{setup_level_loading, spawn_level};
@@ -11,25 +10,19 @@ use crate::systems::startup::setup;
 pub fn build_app() -> App {
     let mut app = App::new();
 
-    // Core plugins: Image nearest filtering, embedded assets (for WASM), and asset loading
-    let mut default_plugins = DefaultPlugins
+    // Use Unprocessed mode for direct asset loading (native or WASM via Trunk)
+    let asset_plugin: AssetPlugin = AssetPlugin {
+        file_path: "assets".into(),
+        mode: AssetMode::Unprocessed,
+        watch_for_changes_override: Some(false),
+        ..default()
+    };
+
+    let plugins = DefaultPlugins
         .set(ImagePlugin::default_nearest())
-        .set(AssetPlugin {
-            file_path: "assets".into(),
-            mode: AssetMode::Processed, // required to support .meta files
-            watch_for_changes_override: Some(false),
-            ..default()
-        });
+        .set(asset_plugin);
 
-    // WASM: Embed assets at compile time instead of fetching from network
-    #[cfg(target_arch = "wasm32")]
-    {
-        default_plugins = default_plugins
-            .build()
-            .add_before::<AssetPlugin, _>(EmbeddedAssetPlugin::default());
-    }
-
-    app.add_plugins(default_plugins);
+    app.add_plugins(plugins);
 
     // Physics setup
     app.insert_resource(RapierConfiguration {

@@ -2,6 +2,10 @@ use bevy::prelude::*;
 use bevy::render::texture::Image;
 use bevy_rapier2d::prelude::*;
 
+// Embed the cache file as a string on WASM
+#[cfg(target_arch = "wasm32")]
+const COLLISION_CACHE: &str = include_str!("../../assets/collision-cache.txt");
+
 #[derive(Resource)]
 pub struct LevelAssets {
     pub background: Handle<Image>,
@@ -60,8 +64,8 @@ pub fn spawn_level(
         Name::new("LevelBackground"),
     ));
 
-    let cache_path = "assets/collision-cache.txt";
-    if let Some(text) = try_load_collision_cache(cache_path) {
+    // Try loading from cache first
+    if let Some(text) = try_load_collision_cache("assets/collision-cache.txt") {
         if try_spawn_from_cache(&mut commands, &text, beauty_texture, mask_texture).is_some() {
             info!("Spawned level from collision cache");
             return;
@@ -72,6 +76,7 @@ pub fn spawn_level(
         info!("No collision cache found — will generate from mask");
     }
 
+    // Fallback: generate from mask
     let merged_rects = generate_colliders_from_mask(mask_texture, beauty_texture, &mut commands);
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -80,9 +85,8 @@ pub fn spawn_level(
             .iter()
             .map(|(x, y, w, h)| format!("{x},{y},{w},{h}"))
             .collect();
-        let result = std::fs::write(cache_path, lines.join("\n"));
-        if let Err(e) = result {
-            warn!("Failed to write collision cache: {}", e);
+        if let Err(e) = std::fs::write("assets/collision-cache.txt", lines.join("\n")) {
+            warn!("Failed to write collision cache: {e}");
         }
     }
 
@@ -97,14 +101,14 @@ pub fn spawn_level(
 // Helpers
 // -----------------------------------------------------------------------------
 
-fn try_load_collision_cache(path: &str) -> Option<String> {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        std::fs::read_to_string(path).ok()
-    }
+fn try_load_collision_cache(_path: &str) -> Option<String> {
     #[cfg(target_arch = "wasm32")]
     {
-        None
+        Some(COLLISION_CACHE.to_string())
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        std::fs::read_to_string(_path).ok()
     }
 }
 
@@ -116,7 +120,6 @@ fn try_spawn_from_cache(
 ) -> Option<()> {
     let tile_size = compute_tile_size(mask, beauty);
     let origin_offset = compute_origin_offset(mask, tile_size);
-
     let mut num_colliders = 0;
 
     for line in text.lines() {
@@ -134,19 +137,16 @@ fn try_spawn_from_cache(
         num_colliders += 1;
     }
 
-    info!("Spawned {} colliders from cache", num_colliders);
-
+    info!("Spawned {num_colliders} colliders from cache");
     Some(())
 }
 
 fn compute_tile_size(mask: &Image, beauty: &Image) -> f32 {
     let mask_w = mask.size().x as f32;
     let mask_h = mask.size().y as f32;
-    let beauty_w = beauty.size().x;
-    let beauty_h = beauty.size().y;
-    let tile_size_x = beauty_w as f32 / mask_w;
-    let tile_size_y = beauty_h as f32 / mask_h;
-    tile_size_x.min(tile_size_y)
+    let beauty_w = beauty.size().x as f32;
+    let beauty_h = beauty.size().y as f32;
+    (beauty_w / mask_w).min(beauty_h / mask_h)
 }
 
 fn compute_origin_offset(mask: &Image, tile_size: f32) -> Vec2 {
@@ -166,18 +166,20 @@ fn generate_colliders_from_mask(
     let w = mask.size().x as usize;
     let h = mask.size().y as usize;
     let data = &mask.data;
-    let pixel_stride = 4;
+    let stride = 4;
 
     let mut solid = vec![vec![false; w]; h];
     for y in 0..h {
         for x in 0..w {
-            let idx = (y * w + x) * pixel_stride;
+            let idx = (y * w + x) * stride;
             solid[y][x] = data[idx] < 128;
         }
     }
 
     let mut visited = vec![vec![false; w]; h];
     let mut merged = Vec::new();
+    let tile_size = compute_tile_size(mask, beauty);
+    let origin_offset = compute_origin_offset(mask, tile_size);
 
     for y in 0..h {
         for x in 0..w {
@@ -191,10 +193,10 @@ fn generate_colliders_from_mask(
             }
 
             let mut rect_h = 1;
-            'check_rows: while y + rect_h < h {
+            'grow: while y + rect_h < h {
                 for dx in 0..rect_w {
                     if !solid[y + rect_h][x + dx] || visited[y + rect_h][x + dx] {
-                        break 'check_rows;
+                        break 'grow;
                     }
                 }
                 rect_h += 1;
@@ -206,16 +208,7 @@ fn generate_colliders_from_mask(
                 }
             }
 
-            spawn_collider(
-                commands,
-                x,
-                y,
-                rect_w,
-                rect_h,
-                compute_tile_size(mask, beauty),
-                compute_origin_offset(mask, compute_tile_size(mask, beauty)),
-            );
-
+            spawn_collider(commands, x, y, rect_w, rect_h, tile_size, origin_offset);
             merged.push((x, y, rect_w, rect_h));
         }
     }
@@ -241,11 +234,11 @@ fn spawn_collider(
         0.5,
     );
 
-    let half_width = w as f32 * tile_size / 2.0;
-    let half_height = h as f32 * tile_size / 2.0;
+    let half_w = w as f32 * tile_size / 2.0;
+    let half_h = h as f32 * tile_size / 2.0;
 
     commands.spawn((
-        Collider::cuboid(half_width, half_height),
+        Collider::cuboid(half_w, half_h),
         Transform::from_translation(world_pos),
         GlobalTransform::default(),
         Name::new("MergedWall"),
