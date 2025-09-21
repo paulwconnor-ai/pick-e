@@ -65,8 +65,8 @@ pub fn draw_occupancy_grid_system(mut gizmos: Gizmos, query: Query<&OccupancyGri
                 );
 
                 let color = match state {
-                    CellState::Free => Color::rgba(0.1, 1.0, 0.1, 0.2), // green
-                    CellState::Solid => Color::rgba(1.0, 0.0, 0.0, 0.8), // red
+                    CellState::Free => Color::rgba(0.1, 1.0, 0.1, 0.1), // green
+                    CellState::Solid => Color::rgba(1.0, 0.0, 0.0, 0.5), // red
                     CellState::Unknown => continue,
                 };
 
