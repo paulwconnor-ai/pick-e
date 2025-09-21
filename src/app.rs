@@ -3,6 +3,9 @@ use bevy::prelude::*;
 use bevy::window::{Window, WindowPlugin};
 use bevy_rapier2d::prelude::*;
 
+use crate::components::collectible::CollectionStats;
+use crate::systems::collectibles::collect_on_collision;
+use crate::systems::collectibles::spawn_collectibles;
 use crate::systems::level::{setup_level_loading, spawn_level};
 use crate::systems::robot::cmd_vel_drive::cmd_vel_to_velocity_system;
 use crate::systems::robot::input_keyboard::keyboard_control_system;
@@ -67,6 +70,11 @@ pub fn build_app() -> App {
             draw_occupancy_grid_system.after(update_occupancy_grid_system),
         ),
     );
+
+    app.insert_resource(CollectionStats::default());
+    app.add_systems(Update, collect_on_collision);
+
+    app.add_systems(Startup, spawn_collectibles);
 
     app
 }
