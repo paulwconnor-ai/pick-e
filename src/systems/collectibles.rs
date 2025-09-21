@@ -21,6 +21,7 @@ pub fn flood_spawn_collectibles_from_map(
     asset_server: Res<AssetServer>,
     level_assets: Res<crate::systems::level::LevelAssets>,
     mut state: ResMut<CollectibleFloodState>,
+    mut stats: ResMut<CollectionStats>,
 ) {
     if state.has_spawned {
         return;
@@ -150,6 +151,8 @@ pub fn flood_spawn_collectibles_from_map(
             if overlaps_blue {
                 continue;
             }
+
+            stats.total += 1;
 
             commands.spawn((
                 SpriteBundle {

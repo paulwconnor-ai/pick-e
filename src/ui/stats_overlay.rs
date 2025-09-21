@@ -1,3 +1,4 @@
+use crate::components::collectible::CollectionStats;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy::text::{BreakLineOn, JustifyText};
@@ -69,13 +70,17 @@ fn setup_top_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
         });
 }
 
-fn update_top_hud(mut q: Query<&mut Text, With<TopHudText>>, time: Res<Time>) {
+fn update_top_hud(
+    mut q: Query<&mut Text, With<TopHudText>>,
+    time: Res<Time>,
+    mut stats: ResMut<CollectionStats>,
+) {
     // TODO: replace these mocks with real data:
-    // - collected / total from your CollectionStats + a total counter
-    // - explored_pct derived from your occupancy grid stats
-    let collected = 42;
-    let total = 100;
-    let explored_pct = 82.7;
+    // - explored_pct derived from your occupancy grid stats (cells visited, or similar)
+
+    let collected = stats.collected;
+    let total = stats.total;
+    let explored_pct = 0;
 
     let sim = time.elapsed();
     let mins = (sim.as_secs() / 60) as u64;
