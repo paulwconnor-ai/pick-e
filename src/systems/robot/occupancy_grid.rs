@@ -38,7 +38,10 @@ pub fn update_occupancy_grid_system(
                     }
                 // Else: we don't assume anything — not Solid, not Free
                 } else {
-                    grid.set(x, y, CellState::Free);
+                    // Only mark as free if not already known to be solid
+                    if grid.get(x, y).unwrap_or(CellState::Unknown) != CellState::Solid {
+                        grid.set(x, y, CellState::Free);
+                    }
                 }
             }
         }
