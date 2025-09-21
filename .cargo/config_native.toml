@@ -1,0 +1,6 @@
+[build]
+rustflags = ["-C", "force-frame-pointers=yes"]
+
+[profile.dev]
+debug = 2
+opt-level = 1

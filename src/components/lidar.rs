@@ -28,6 +28,5 @@ pub struct LidarEmitter {
     pub angle_cursor: f32,
 
     /// This frame’s emitted rays (cleared each frame)
-    #[cfg(debug_assertions)]
     pub hits: Vec<LidarHit>,
 }

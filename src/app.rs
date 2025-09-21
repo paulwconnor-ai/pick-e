@@ -7,6 +7,9 @@ use crate::systems::level::{setup_level_loading, spawn_level};
 use crate::systems::robot::cmd_vel_drive::cmd_vel_to_velocity_system;
 use crate::systems::robot::input_keyboard::keyboard_control_system;
 use crate::systems::robot::lidar_sensor::{lidar_debug_draw_system, lidar_sensor_system};
+use crate::systems::robot::occupancy_grid::{
+    draw_occupancy_grid_system, update_occupancy_grid_system,
+};
 use crate::systems::startup::setup;
 
 pub fn build_app() -> App {
@@ -54,6 +57,14 @@ pub fn build_app() -> App {
         (
             lidar_sensor_system,
             lidar_debug_draw_system.after(lidar_sensor_system),
+        ),
+    );
+
+    app.add_systems(
+        Update,
+        (
+            update_occupancy_grid_system,
+            draw_occupancy_grid_system.after(update_occupancy_grid_system),
         ),
     );
 

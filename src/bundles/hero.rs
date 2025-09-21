@@ -4,7 +4,8 @@ use bevy_rapier2d::prelude::*;
 
 use crate::components::cmd_vel::CmdVel;
 use crate::components::lidar::*;
-use crate::constants::HERO_RADIUS_PX;
+use crate::components::occupancy_grid::OccupancyGrid;
+use crate::constants::*;
 
 /// Marker for input control
 #[derive(Component)]
@@ -49,5 +50,14 @@ fn physics_bundle() -> impl Bundle {
 }
 
 pub fn perception_bundle() -> impl Bundle {
-    (LidarSensor, LidarEmitter::default())
+    (
+        LidarSensor,
+        LidarEmitter::default(),
+        OccupancyGrid::new(
+            LOGICAL_W as usize,
+            LOGICAL_H as usize,
+            OCCUPANCY_GRID_RES,
+            Vec2::new(-LOGICAL_H, -LOGICAL_W),
+        ),
+    )
 }

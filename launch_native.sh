@@ -10,8 +10,8 @@ cp -r assets target/debug/
 # Check for --build-only flag
 if [ "$1" = "--build-only" ]; then
     echo "🔨 Building only (no run)..."
-    cargo build || exit $?
+    cargo build --profile=dev || exit $?
 else
     echo "🚀 Launching native build..."
-    cargo run
+    cargo run --profile=dev
 fi
