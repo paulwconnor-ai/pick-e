@@ -11,17 +11,14 @@ const DEBUG_DRAW_COLLISIONS: bool = false;
 #[derive(Resource)]
 pub struct LevelAssets {
     pub background: Handle<Image>,
-    pub mask: Handle<Image>,
     pub spawned: bool,
 }
 
 pub fn setup_level_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
     let background = asset_server.load("textures/map-beauty.png");
-    let mask = asset_server.load("textures/map-beauty.png");
 
     commands.insert_resource(LevelAssets {
         background,
-        mask,
         spawned: false,
     });
 
@@ -36,11 +33,6 @@ pub fn spawn_level(
     if level_assets.spawned {
         return;
     }
-
-    let Some(mask_texture) = images.get(&level_assets.mask) else {
-        debug!("Waiting for mask texture to load...");
-        return;
-    };
     let Some(beauty_texture) = images.get(&level_assets.background) else {
         debug!("Waiting for beauty texture to load...");
         return;
@@ -68,7 +60,7 @@ pub fn spawn_level(
 
     // Try loading from cache first
     if let Some(text) = try_load_collision_cache("assets/collision-cache.txt") {
-        if try_spawn_from_cache(&mut commands, &text, beauty_texture, mask_texture).is_some() {
+        if try_spawn_from_cache(&mut commands, &text, beauty_texture).is_some() {
             info!("Spawned level from collision cache");
             return;
         } else {
@@ -79,7 +71,7 @@ pub fn spawn_level(
     }
 
     // Fallback: generate from mask
-    let merged_rects = generate_colliders_from_beauty(mask_texture, &mut commands);
+    let merged_rects = generate_colliders_from_beauty(beauty_texture, &mut commands);
 
     #[cfg(not(target_arch = "wasm32"))]
     {
@@ -95,7 +87,7 @@ pub fn spawn_level(
     info!(
         "Spawned {} colliders from mask (tile = {:.2})",
         merged_rects.len(),
-        compute_tile_size(mask_texture, beauty_texture)
+        DOWNSCALE_FACTOR as f32
     );
 }
 
@@ -117,8 +109,7 @@ fn try_load_collision_cache(_path: &str) -> Option<String> {
 fn try_spawn_from_cache(
     commands: &mut Commands,
     text: &str,
-    beauty: &Image,
-    mask: &Image,
+    beauty: &Image
 ) -> Option<()> {
     let tile_size = DOWNSCALE_FACTOR as f32;
     let origin_offset = compute_origin_offset(beauty, tile_size);
@@ -142,14 +133,6 @@ fn try_spawn_from_cache(
 
     info!("Spawned {num_colliders} colliders from cache");
     Some(())
-}
-
-fn compute_tile_size(mask: &Image, beauty: &Image) -> f32 {
-    let mask_w = mask.size().x as f32;
-    let mask_h = mask.size().y as f32;
-    let beauty_w = beauty.size().x as f32;
-    let beauty_h = beauty.size().y as f32;
-    (beauty_w / mask_w).min(beauty_h / mask_h)
 }
 
 pub fn compute_origin_offset(image: &Image, tile_size: f32) -> Vec2 {
