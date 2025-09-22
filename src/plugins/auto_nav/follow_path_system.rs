@@ -8,8 +8,15 @@ use bevy::prelude::*;
 
 pub fn follow_path_system(
     mode: Res<AutoNavMode>,
+    mut commands: Commands,
     mut query: Query<
-        (&mut CmdVel, &mut PathPlan, &GlobalTransform, &OccupancyGrid),
+        (
+            Entity,
+            &mut CmdVel,
+            &mut PathPlan,
+            &GlobalTransform,
+            &OccupancyGrid,
+        ),
         With<HeroController>,
     >,
 ) {
@@ -17,7 +24,7 @@ pub fn follow_path_system(
         return;
     }
 
-    for (mut cmd, mut path, xform, grid) in query.iter_mut() {
+    for (entity, mut cmd, mut path, xform, grid) in query.iter_mut() {
         // get this bot's position, and check if it has any more path-cells to traverse:
         let pos = xform.translation().truncate();
         let Some(next_cell) = path.cells.first() else {
@@ -49,10 +56,15 @@ pub fn follow_path_system(
             );
             path.cells.remove(0);
             if path.cells.is_empty() {
-                info!("[AutoNav] Path complete — stopping.");
+                info!("[AutoNav] Path complete — removing PathPlan.");
                 cmd.linear = 0.0;
                 cmd.angular = 0.0;
+
+                // Remove the component to allow replanning
+                // You’ll need access to `Entity` and `Commands`
+                commands.entity(entity).remove::<PathPlan>();
             }
+
             continue;
         }
 
