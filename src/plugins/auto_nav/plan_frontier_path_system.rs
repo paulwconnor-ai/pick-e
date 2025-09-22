@@ -3,14 +3,17 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 use crate::bundles::hero::HeroController;
 use crate::components::occupancy_grid::{CellState, OccupancyGrid};
-use crate::plugins::auto_nav::constants::*;
-use crate::plugins::auto_nav::mode::{AutoNavMode, Phase};
+use crate::plugins::auto_nav::auto_nav_constants::*;
+use crate::plugins::auto_nav::toggle_autonav_system::{AutoNavMode, Phase};
 
 #[derive(Component)]
 pub struct PathPlan {
     pub cells: Vec<IVec2>,
     pub target: IVec2,
 }
+
+#[derive(Component)]
+pub struct PathDebugMarker;
 
 pub fn plan_frontier_path_system(
     mut mode: ResMut<AutoNavMode>,
@@ -19,6 +22,7 @@ pub fn plan_frontier_path_system(
         (Entity, &GlobalTransform, &OccupancyGrid, Option<&PathPlan>),
         With<HeroController>,
     >,
+    debug_markers: Query<Entity, With<PathDebugMarker>>,
 ) {
     if !mode.enabled {
         return;
@@ -51,6 +55,11 @@ pub fn plan_frontier_path_system(
             }),
         };
 
+        // Despawn all existing path debug markers before drawing new ones
+        for e in debug_markers.iter() {
+            commands.entity(e).despawn_recursive();
+        }
+
         if let Some(goal) = target {
             if let Some(path) = astar_with_policy(
                 grid,
@@ -63,6 +72,24 @@ pub fn plan_frontier_path_system(
                     band_max: WALL_BAND_MAX,
                 },
             ) {
+                // Draw debug markers for the new path
+                for cell in &path {
+                    let pos = grid.cell_to_world(*cell);
+                    commands.spawn((
+                        SpriteBundle {
+                            transform: Transform::from_translation(pos.extend(20.0)),
+                            sprite: Sprite {
+                                color: Color::rgba(0.2, 1.0, 0.4, 0.5),
+                                custom_size: Some(Vec2::splat(grid.resolution * 0.6)),
+                                ..default()
+                            },
+                            ..default()
+                        },
+                        PathDebugMarker,
+                    ));
+                }
+
+                // Insert path into entity
                 commands.entity(entity).insert(PathPlan {
                     cells: path,
                     target: goal,

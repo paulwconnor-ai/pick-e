@@ -4,7 +4,7 @@ use bevy::window::{Window, WindowPlugin};
 use bevy_rapier2d::prelude::*;
 
 use crate::components::collectible::CollectionStats;
-use crate::plugins::auto_nav::plugin::AutoNavPlugin;
+use crate::plugins::auto_nav::auto_nav_plugin::AutoNavPlugin;
 use crate::systems::collectibles::{
     collect_on_collision, flood_spawn_collectibles_from_map, CollectibleFloodState,
 };

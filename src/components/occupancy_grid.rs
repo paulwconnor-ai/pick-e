@@ -9,7 +9,7 @@ pub enum CellState {
 
 #[derive(Component)]
 pub struct OccupancyGrid {
-    pub resolution: f32, // meters per cell
+    pub resolution: f32, // pixels per cell
     pub width: usize,
     pub height: usize,
     pub origin: Vec2,          // world-space origin of (0,0) in grid

@@ -1,9 +1,9 @@
 use crate::bundles::hero::HeroController;
 use crate::components::cmd_vel::CmdVel;
 use crate::components::occupancy_grid::{CellState, OccupancyGrid};
-use crate::plugins::auto_nav::constants::*;
-use crate::plugins::auto_nav::mode::AutoNavMode;
-use crate::plugins::auto_nav::path_planning::{has_unknown_neighbor, is_safe_cell, PathPlan};
+use crate::plugins::auto_nav::auto_nav_constants::*;
+use crate::plugins::auto_nav::toggle_autonav_system::AutoNavMode;
+use crate::plugins::auto_nav::plan_frontier_path_system::{has_unknown_neighbor, is_safe_cell, PathPlan};
 use bevy::prelude::*;
 
 pub fn stop_when_done_system(
