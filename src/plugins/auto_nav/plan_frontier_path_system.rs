@@ -9,7 +9,6 @@ use crate::plugins::auto_nav::toggle_autonav_system::{AutoNavMode, Phase};
 #[derive(Component)]
 pub struct PathPlan {
     pub cells: Vec<IVec2>,
-    pub target: IVec2,
 }
 
 #[derive(Component)]
@@ -18,8 +17,13 @@ pub struct PathDebugMarker;
 pub fn plan_frontier_path_system(
     mut mode: ResMut<AutoNavMode>,
     mut commands: Commands,
-    query: Query<
-        (Entity, &GlobalTransform, &OccupancyGrid, Option<&PathPlan>),
+    mut query: Query<
+        (
+            Entity,
+            &GlobalTransform,
+            &mut OccupancyGrid,
+            Option<&PathPlan>,
+        ),
         With<HeroController>,
     >,
     debug_markers: Query<Entity, With<PathDebugMarker>>,
@@ -28,7 +32,7 @@ pub fn plan_frontier_path_system(
         return;
     }
 
-    for (entity, xform, grid, maybe_path) in query.iter() {
+    for (entity, xform, mut grid, maybe_path) in query.iter_mut() {
         if maybe_path.is_some() {
             continue; // already has a plan
         }
@@ -40,19 +44,19 @@ pub fn plan_frontier_path_system(
 
         // --- Pick a target ---
         let target = match mode.phase {
-            Phase::WallSweep => find_nearest_frontier_where(grid, start_cell, |c| {
-                is_safe_cell(grid, c, SAFE_MARGIN_MIN)
-                    && is_wall_band_cell(grid, c, SAFE_MARGIN_MIN, WALL_BAND_MAX)
+            Phase::WallSweep => find_nearest_frontier_where(&grid, start_cell, |c| {
+                is_safe_cell(&grid, c, SAFE_MARGIN_MIN)
+                    && is_wall_band_cell(&grid, c, SAFE_MARGIN_MIN, WALL_BAND_MAX)
             })
             .or_else(|| {
                 mode.phase = Phase::Fill;
                 info!("[AutoNav] No wall-band frontiers; switching to Fill.");
-                find_nearest_frontier_where(grid, start_cell, |c| {
-                    is_safe_cell(grid, c, SAFE_MARGIN_MIN)
+                find_nearest_frontier_where(&grid, start_cell, |c| {
+                    is_safe_cell(&grid, c, SAFE_MARGIN_MIN)
                 })
             }),
-            Phase::Fill => find_nearest_frontier_where(grid, start_cell, |c| {
-                is_safe_cell(grid, c, SAFE_MARGIN_MIN)
+            Phase::Fill => find_nearest_frontier_where(&grid, start_cell, |c| {
+                is_safe_cell(&grid, c, SAFE_MARGIN_MIN)
             }),
         };
 
@@ -63,7 +67,7 @@ pub fn plan_frontier_path_system(
 
         if let Some(goal) = target {
             if let Some(path) = astar_with_policy(
-                grid,
+                &grid,
                 start_cell,
                 goal,
                 PathPolicy {
@@ -90,10 +94,9 @@ pub fn plan_frontier_path_system(
                     ));
                 }
 
-                // Insert reduced path
+                // Insert path
                 commands.entity(entity).insert(PathPlan {
-                    cells: path,
-                    target: goal,
+                    cells: path
                 });
 
                 info!(
@@ -101,6 +104,21 @@ pub fn plan_frontier_path_system(
                     goal, start_cell
                 );
             }
+        } else {
+            // No valid frontier found — reset the grid's explored area (keep solids)
+            warn!("[AutoNav] No valid frontier remaining. Clearing grid and restarting...");
+
+            for y in 0..grid.height {
+                for x in 0..grid.width {
+                    let cell = IVec2::new(x as i32, y as i32);
+                    if grid.get_cell(cell) == Some(CellState::Free) {
+                        grid.set_cell(cell, CellState::Unknown);
+                    }
+                }
+            }
+
+            // Reset phase to WallSweep
+            mode.phase = Phase::WallSweep;
         }
     }
 }
@@ -188,7 +206,7 @@ fn in_bounds(grid: &OccupancyGrid, c: IVec2) -> bool {
     c.x >= 0 && c.y >= 0 && (c.x as usize) < grid.width && (c.y as usize) < grid.height
 }
 
-/* ---------------- A* + waypoint reduction ---------------- */
+/* ---------------- A* ---------------- */
 
 #[derive(Clone, Copy)]
 struct PathPolicy {

@@ -57,6 +57,15 @@ impl OccupancyGrid {
         }
     }
 
+    /// New: get using IVec2
+    pub fn set_cell(&mut self, cell: IVec2, state: CellState) {
+        let x = cell.x;
+        let y = cell.y;
+        if x >= 0 && y >= 0 {
+            self.set(x as usize, y as usize, state)
+        }
+    }
+
     /// Converts from world position to grid cell
     pub fn world_to_cell(&self, pos: Vec2) -> Option<IVec2> {
         let rel = (pos - self.origin) / self.resolution;
