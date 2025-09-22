@@ -1,0 +1,14 @@
+# Trunk.toml
+
+# [build]
+# target = "wasm32-unknown-unknown"
+
+[[copy]]
+source = "assets"
+dest = "assets"
+# (No SPA fallback on these; Trunk will just copy them verbatim)
+
+[tools.wasm-bindgen]
+version = "system"
+wasm-opt = false
+args = ["--no-typescript", "--no-modules"]
