@@ -1,5 +1,5 @@
 use crate::components::collectible::CollectionStats;
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin};
+use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::prelude::*;
 use bevy::text::{BreakLineOn, JustifyText};
 
@@ -10,15 +10,89 @@ pub struct StatsOverlayText; // bottom-left perf panel
 #[derive(Component)]
 pub struct TopHudText; // top-center game HUD
 
+#[derive(Component)]
+pub struct CreditsOverlayText; // bottom-center credits panel
+
 // ---------- plugin ----------
 pub struct StatsOverlayPlugin;
 
 impl Plugin for StatsOverlayPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(FrameTimeDiagnosticsPlugin)
-            .add_systems(Startup, (setup_top_hud, setup_stats_ui))
+            .add_systems(Startup, (setup_top_hud, setup_stats_ui, setup_credits_ui))
             .add_systems(Update, (update_top_hud, update_stats_text));
     }
+}
+
+// ---------- CREDITS PANEL (bottom-center) ----------
+fn setup_credits_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let font = asset_server.load("fonts/FiraMono-Medium.ttf");
+
+    commands
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    bottom: Val::Px(0.0),
+                    left: Val::Px(0.0),
+                    right: Val::Px(0.0),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    flex_direction: FlexDirection::Column,
+                    padding: UiRect::all(Val::Px(8.0)),
+                    ..default()
+                },
+                background_color: Color::rgba(1.0, 1.0, 1.0, 0.0).into(),
+                ..default()
+            },
+            Name::new("CreditsOverlay"),
+        ))
+        .with_children(|parent| {
+            // Big "Pick.e"
+            parent.spawn((
+                TextBundle::from_section(
+                    "Pick.e",
+                    TextStyle {
+                        font: font.clone(),
+                        font_size: 58.0,
+                        color: Color::rgb(0.5, 0.5, 0.8),
+                    },
+                )
+                .with_text_justify(JustifyText::Center),
+                CreditsOverlayText,
+            ));
+
+            // Subtitles
+            parent.spawn((TextBundle::from_section(
+                "created by Paul Connor in 2 days as a Rust/Bevy/Rapier",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 14.0,
+                    color: Color::rgb(0.1, 0.1, 0.4),
+                },
+            )
+            .with_text_justify(JustifyText::Center),));
+
+            parent.spawn((TextBundle::from_section(
+                "learning exercise (see README.md for more info)",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 14.0,
+                    color: Color::rgb(0.1, 0.1, 0.4),
+                },
+            )
+            .with_text_justify(JustifyText::Center),));
+
+            parent.spawn((TextBundle::from_section(
+                "You can press M to toggle autopilot - use WASD keys to drive yourself.",
+                TextStyle {
+                    font,
+                    font_size: 18.0,
+                    color: Color::rgb(0.1, 0.1, 0.4),
+                },
+            )
+            .with_text_justify(JustifyText::Center),));
+        });
 }
 
 // ---------- TOP HUD (gamey) ----------

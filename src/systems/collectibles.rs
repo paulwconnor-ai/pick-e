@@ -154,6 +154,8 @@ pub fn flood_spawn_collectibles_from_map(
 
             stats.total += 1;
 
+            const COLLISION_RADIUS_MUL: f32 = 10.0;
+
             commands.spawn((
                 SpriteBundle {
                     texture: texture.clone(),
@@ -166,7 +168,7 @@ pub fn flood_spawn_collectibles_from_map(
                 },
                 Collectible,
                 RigidBody::Fixed,
-                Collider::ball(COLLECTIBLE_RADIUS),
+                Collider::ball(COLLECTIBLE_RADIUS * COLLISION_RADIUS_MUL),
                 Sensor,
                 ActiveEvents::COLLISION_EVENTS,
                 CollisionGroups::new(Group::GROUP_2, Group::ALL),

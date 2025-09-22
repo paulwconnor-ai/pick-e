@@ -9,7 +9,7 @@ pub enum CellState {
 
 #[derive(Component)]
 pub struct OccupancyGrid {
-    pub resolution: f32, // meters per cell
+    pub resolution: f32, // pixels per cell
     pub width: usize,
     pub height: usize,
     pub origin: Vec2,          // world-space origin of (0,0) in grid
@@ -54,6 +54,15 @@ impl OccupancyGrid {
             self.get(x as usize, y as usize)
         } else {
             None
+        }
+    }
+
+    /// New: get using IVec2
+    pub fn set_cell(&mut self, cell: IVec2, state: CellState) {
+        let x = cell.x;
+        let y = cell.y;
+        if x >= 0 && y >= 0 {
+            self.set(x as usize, y as usize, state)
         }
     }
 

@@ -1,6 +1,6 @@
-pub mod plugin;
-pub mod mode;
-pub mod path_planning;
-pub mod follow_path;
-pub mod done_check;
-pub mod constants;
+pub mod auto_nav_plugin;
+pub mod toggle_autonav_system;
+pub mod plan_frontier_path_system;
+pub mod follow_path_system;
+pub mod stop_when_done_system;
+pub mod auto_nav_constants;

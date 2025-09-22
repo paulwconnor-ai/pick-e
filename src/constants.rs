@@ -31,8 +31,8 @@ pub const LIDAR_SPIN_RATE_HZ: f32 = 5.0;
 pub const LIDAR_ANGLE_STEP: f32 = 2.0;
 
 /// Maximum sensor range in real-world meters.
-/// (limit ourselves to 2 metres, to force more exploring)
-pub const LIDAR_MAX_RANGE_METERS: f32 = 2.0;
+/// (limit ourselves to 1 metre, to force more exploring)
+pub const LIDAR_MAX_RANGE_METERS: f32 = 1.0;
 
 /// Max LIDAR range in world pixels, based on METERS_PER_PIXEL.
 pub const LIDAR_MAX_RANGE_PX: f32 = LIDAR_MAX_RANGE_METERS / METERS_PER_PIXEL;

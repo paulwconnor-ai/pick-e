@@ -1,0 +1,299 @@
+use bevy::prelude::*;
+use std::collections::{HashMap, HashSet, VecDeque};
+
+use crate::bundles::hero::HeroController;
+use crate::components::occupancy_grid::{CellState, OccupancyGrid};
+use crate::plugins::auto_nav::auto_nav_constants::*;
+use crate::plugins::auto_nav::toggle_autonav_system::{AutoNavMode, Phase};
+
+#[derive(Component)]
+pub struct PathPlan {
+    pub cells: Vec<IVec2>,
+}
+
+#[derive(Component)]
+pub struct PathDebugMarker;
+
+pub fn plan_frontier_path_system(
+    mut mode: ResMut<AutoNavMode>,
+    mut commands: Commands,
+    mut query: Query<
+        (
+            Entity,
+            &GlobalTransform,
+            &mut OccupancyGrid,
+            Option<&PathPlan>,
+        ),
+        With<HeroController>,
+    >,
+    debug_markers: Query<Entity, With<PathDebugMarker>>,
+) {
+    if !mode.enabled {
+        return;
+    }
+
+    for (entity, xform, mut grid, maybe_path) in query.iter_mut() {
+        if maybe_path.is_some() {
+            continue; // already has a plan
+        }
+
+        let pos = xform.translation().truncate();
+        let Some(start_cell) = grid.world_to_cell(pos) else {
+            continue;
+        };
+
+        // --- Pick a target ---
+        let target = match mode.phase {
+            Phase::WallSweep => find_nearest_frontier_where(&grid, start_cell, |c| {
+                is_safe_cell(&grid, c, SAFE_MARGIN_MIN)
+                    && is_wall_band_cell(&grid, c, SAFE_MARGIN_MIN, WALL_BAND_MAX)
+            })
+            .or_else(|| {
+                mode.phase = Phase::Fill;
+                info!("[AutoNav] No wall-band frontiers; switching to Fill.");
+                find_nearest_frontier_where(&grid, start_cell, |c| {
+                    is_safe_cell(&grid, c, SAFE_MARGIN_MIN)
+                })
+            }),
+            Phase::Fill => find_nearest_frontier_where(&grid, start_cell, |c| {
+                is_safe_cell(&grid, c, SAFE_MARGIN_MIN)
+            }),
+        };
+
+        // Clear old debug markers
+        for e in debug_markers.iter() {
+            commands.entity(e).despawn_recursive();
+        }
+
+        if let Some(goal) = target {
+            if let Some(path) = astar_with_policy(
+                &grid,
+                start_cell,
+                goal,
+                PathPolicy {
+                    avoid_unsafe: true,
+                    prefer_band: mode.phase == Phase::WallSweep,
+                    safe_min: SAFE_MARGIN_MIN,
+                    band_max: WALL_BAND_MAX,
+                },
+            ) {
+                // Draw debug markers for waypoints
+                for cell in &path {
+                    let p = grid.cell_to_world(*cell);
+                    commands.spawn((
+                        SpriteBundle {
+                            transform: Transform::from_translation(p.extend(20.0)),
+                            sprite: Sprite {
+                                color: Color::rgba(0.2, 1.0, 0.4, 0.5),
+                                custom_size: Some(Vec2::splat(grid.resolution * 0.6)),
+                                ..default()
+                            },
+                            ..default()
+                        },
+                        PathDebugMarker,
+                    ));
+                }
+
+                // Insert path
+                commands.entity(entity).insert(PathPlan { cells: path });
+            }
+        } else {
+            // No valid frontier found — reset the grid's explored area (keep solids)
+            warn!("[AutoNav] No valid frontier remaining. Clearing grid and restarting...");
+
+            for y in 0..grid.height {
+                for x in 0..grid.width {
+                    let cell = IVec2::new(x as i32, y as i32);
+                    if grid.get_cell(cell) == Some(CellState::Free) {
+                        grid.set_cell(cell, CellState::Unknown);
+                    }
+                }
+            }
+
+            // Reset phase to WallSweep
+            mode.phase = Phase::WallSweep;
+        }
+    }
+}
+
+/* ---------------- Frontier target selection (original) ---------------- */
+
+fn find_nearest_frontier_where(
+    grid: &OccupancyGrid,
+    start: IVec2,
+    predicate: impl Fn(IVec2) -> bool,
+) -> Option<IVec2> {
+    let mut visited = HashSet::new();
+    let mut queue = VecDeque::new();
+    queue.push_back(start);
+    visited.insert(start);
+
+    while let Some(current) = queue.pop_front() {
+        if grid.get_cell(current) == Some(CellState::Free)
+            && has_unknown_neighbor(grid, current)
+            && predicate(current)
+        {
+            return Some(current);
+        }
+
+        for n in neighbors4(current) {
+            if !visited.contains(&n) && grid.get_cell(n) == Some(CellState::Free) {
+                visited.insert(n);
+                queue.push_back(n);
+            }
+        }
+    }
+
+    None
+}
+
+/* ---------------- Helpers ---------------- */
+
+pub fn has_unknown_neighbor(grid: &OccupancyGrid, cell: IVec2) -> bool {
+    neighbors4(cell)
+        .iter()
+        .any(|&n| grid.get_cell(n) == Some(CellState::Unknown))
+}
+
+fn neighbors4(cell: IVec2) -> [IVec2; 4] {
+    [
+        cell + IVec2::X,
+        cell - IVec2::X,
+        cell + IVec2::Y,
+        cell - IVec2::Y,
+    ]
+}
+
+pub fn is_safe_cell(grid: &OccupancyGrid, cell: IVec2, safe_min: i32) -> bool {
+    let d = distance_to_solid_or_edge(grid, cell, DIST_SCAN_MAX);
+    d >= safe_min
+}
+
+fn is_wall_band_cell(grid: &OccupancyGrid, cell: IVec2, safe_min: i32, band_max: i32) -> bool {
+    let d = distance_to_solid_or_edge(grid, cell, DIST_SCAN_MAX);
+    d >= safe_min && d <= band_max
+}
+
+/// Manhattan-like local distance to nearest SOLID or map EDGE (edges treated as solid).
+/// Returns a value in [0..=scan_max], where 0 means touching; scan_max+1 means beyond scan range.
+pub fn distance_to_solid_or_edge(grid: &OccupancyGrid, cell: IVec2, scan_max: i32) -> i32 {
+    if !in_bounds(grid, cell) || grid.get_cell(cell) == Some(CellState::Solid) {
+        return 0;
+    }
+
+    for r in 1..=scan_max {
+        for dy in -r..=r {
+            let dx = r - dy.abs();
+            for sx in [-1, 1] {
+                let c1 = cell + IVec2::new(sx * dx, dy);
+                if !in_bounds(grid, c1) || grid.get_cell(c1) == Some(CellState::Solid) {
+                    return r;
+                }
+            }
+        }
+    }
+    scan_max + 1
+}
+
+fn in_bounds(grid: &OccupancyGrid, c: IVec2) -> bool {
+    c.x >= 0 && c.y >= 0 && (c.x as usize) < grid.width && (c.y as usize) < grid.height
+}
+
+/* ---------------- A* ---------------- */
+
+#[derive(Clone, Copy)]
+struct PathPolicy {
+    avoid_unsafe: bool,
+    prefer_band: bool,
+    safe_min: i32,
+    band_max: i32,
+}
+
+fn astar_with_policy(
+    grid: &OccupancyGrid,
+    start: IVec2,
+    goal: IVec2,
+    policy: PathPolicy,
+) -> Option<Vec<IVec2>> {
+    use std::cmp::Ordering;
+    use std::collections::BinaryHeap;
+
+    #[derive(Copy, Clone, Eq, PartialEq)]
+    struct Node {
+        pos: IVec2,
+        g: i32,
+        f: i32,
+    }
+
+    impl Ord for Node {
+        fn cmp(&self, other: &Self) -> Ordering {
+            other.f.cmp(&self.f)
+        }
+    }
+    impl PartialOrd for Node {
+        fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    let mut open = BinaryHeap::new();
+    let mut came: HashMap<IVec2, IVec2> = HashMap::new();
+    let mut g_score: HashMap<IVec2, i32> = HashMap::new();
+
+    open.push(Node {
+        pos: start,
+        g: 0,
+        f: heuristic(start, goal),
+    });
+    g_score.insert(start, 0);
+
+    while let Some(Node { pos, g, .. }) = open.pop() {
+        if pos == goal {
+            let mut path = vec![pos];
+            let mut cur = pos;
+            while let Some(&prev) = came.get(&cur) {
+                path.push(prev);
+                cur = prev;
+            }
+            path.reverse();
+            return Some(path);
+        }
+
+        for nb in neighbors4(pos) {
+            if grid.get_cell(nb) != Some(CellState::Free) {
+                continue;
+            }
+
+            // Safety gate
+            let dist = distance_to_solid_or_edge(grid, nb, DIST_SCAN_MAX);
+            if policy.avoid_unsafe && dist < policy.safe_min {
+                continue;
+            }
+
+            // Step cost + band preference (only for original wallsweep mode)
+            let mut step = 1;
+            if policy.prefer_band && !(dist >= policy.safe_min && dist <= policy.band_max) {
+                step += COST_NON_BAND_PENALTY;
+            }
+
+            let tentative = g + step;
+            if tentative < *g_score.get(&nb).unwrap_or(&i32::MAX) {
+                came.insert(nb, pos);
+                g_score.insert(nb, tentative);
+
+                let f = tentative + heuristic(nb, goal);
+                open.push(Node {
+                    pos: nb,
+                    g: tentative,
+                    f,
+                });
+            }
+        }
+    }
+
+    None
+}
+
+fn heuristic(a: IVec2, b: IVec2) -> i32 {
+    (a.x - b.x).abs() + (a.y - b.y).abs()
+}
