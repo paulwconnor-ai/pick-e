@@ -9,6 +9,14 @@ use crate::plugins::auto_nav::toggle_autonav_system::{AutoNavMode, Phase};
 
 const USE_VISITED_FRONTIERS: bool = true;
 
+// Scoring weights for the visited-coverage target selection
+const W_DIST: f32 = 1.0; // push outward
+const W_GAIN: f32 = 0.7; // prefer cells with unvisited neighbors
+const W_ALIGN: f32 = 0.3; // prefer alignment with current forward heading
+
+// Neighborhood radius (cells) for "gain" (how many unvisited neighbors)
+const GAIN_RADIUS: i32 = 2;
+
 #[derive(Component)]
 pub struct PathPlan {
     pub cells: Vec<IVec2>,
@@ -47,21 +55,36 @@ pub fn plan_frontier_path_system(
             continue;
         };
 
-        let target = match mode.phase {
-            Phase::WallSweep => find_nearest_frontier_where(grid, visited, start_cell, |c| {
+        let forward = xform.right().truncate().normalize_or_zero();
+
+        // pick a target depending on mode/phase
+        let target = if USE_VISITED_FRONTIERS {
+            find_best_unvisited_target(grid, visited, start_cell, forward, |c| {
                 is_safe_cell(grid, c, SAFE_MARGIN_MIN)
-                    && is_wall_band_cell(grid, c, SAFE_MARGIN_MIN, WALL_BAND_MAX)
             })
             .or_else(|| {
-                mode.phase = Phase::Fill;
-                info!("[AutoNav] No wall-band frontiers; switching to Fill.");
+                // fall back to occupancy frontiers if no unvisited found
                 find_nearest_frontier_where(grid, visited, start_cell, |c| {
                     is_safe_cell(grid, c, SAFE_MARGIN_MIN)
                 })
-            }),
-            Phase::Fill => find_nearest_frontier_where(grid, visited, start_cell, |c| {
-                is_safe_cell(grid, c, SAFE_MARGIN_MIN)
-            }),
+            })
+        } else {
+            match mode.phase {
+                Phase::WallSweep => find_nearest_frontier_where(grid, visited, start_cell, |c| {
+                    is_safe_cell(grid, c, SAFE_MARGIN_MIN)
+                        && is_wall_band_cell(grid, c, SAFE_MARGIN_MIN, WALL_BAND_MAX)
+                })
+                .or_else(|| {
+                    mode.phase = Phase::Fill;
+                    info!("[AutoNav] No wall-band frontiers; switching to Fill.");
+                    find_nearest_frontier_where(grid, visited, start_cell, |c| {
+                        is_safe_cell(grid, c, SAFE_MARGIN_MIN)
+                    })
+                }),
+                Phase::Fill => find_nearest_frontier_where(grid, visited, start_cell, |c| {
+                    is_safe_cell(grid, c, SAFE_MARGIN_MIN)
+                }),
+            }
         };
 
         // Despawn all existing path debug markers before drawing new ones
@@ -76,13 +99,16 @@ pub fn plan_frontier_path_system(
                 goal,
                 PathPolicy {
                     avoid_unsafe: true,
-                    prefer_band: mode.phase == Phase::WallSweep,
+                    prefer_band: !USE_VISITED_FRONTIERS && mode.phase == Phase::WallSweep,
                     safe_min: SAFE_MARGIN_MIN,
                     band_max: WALL_BAND_MAX,
                 },
             ) {
-                // Draw debug markers for the new path
-                for cell in &path {
+                // Simplify path to just waypoints (direction changes)
+                let waypoints = reduce_to_waypoints(&path);
+
+                // Draw debug markers for the reduced path
+                for cell in &waypoints {
                     let pos = grid.cell_to_world(*cell);
                     commands.spawn((
                         SpriteBundle {
@@ -98,18 +124,119 @@ pub fn plan_frontier_path_system(
                     ));
                 }
 
-                // Insert path into entity
+                // Insert reduced path
                 commands.entity(entity).insert(PathPlan {
-                    cells: path,
+                    cells: waypoints,
                     target: goal,
                 });
-                info!("[AutoNav:{:?}] Planned path to {:?}", mode.phase, goal);
+
+                info!(
+                    "[AutoNav:{}] Planned to {:?} (start: {:?})",
+                    if USE_VISITED_FRONTIERS {
+                        "VisitedCoverage"
+                    } else {
+                        "Frontier"
+                    },
+                    goal,
+                    start_cell
+                );
             }
         }
     }
 }
 
-/* ---------------- Helpers ---------------- */
+/// Reduces a grid-cell path to only include points where the direction changes
+fn reduce_to_waypoints(path: &[IVec2]) -> Vec<IVec2> {
+    if path.len() <= 2 {
+        return path.to_vec();
+    }
+
+    let mut waypoints = vec![path[0]];
+    let mut prev_dir = path[1] - path[0];
+
+    for i in 2..path.len() {
+        let dir = path[i] - path[i - 1];
+        if dir != prev_dir {
+            waypoints.push(path[i - 1]);
+            prev_dir = dir;
+        }
+    }
+
+    waypoints.push(*path.last().unwrap());
+    waypoints
+}
+
+/* ---------------- Coverage target (visited mode) ---------------- */
+
+fn find_best_unvisited_target(
+    grid: &OccupancyGrid,
+    visited: &VisitedGrid,
+    start: IVec2,
+    forward: Vec2,
+    predicate: impl Fn(IVec2) -> bool,
+) -> Option<IVec2> {
+    let mut seen = HashSet::new();
+    let mut queue = VecDeque::new();
+    queue.push_back(start);
+    seen.insert(start);
+
+    let start_world = grid.cell_to_world(start);
+
+    let mut best: Option<(f32, IVec2)> = None;
+
+    while let Some(cur) = queue.pop_front() {
+        if grid.get_cell(cur) == Some(CellState::Free) {
+            // Only consider *unvisited* cells as candidates
+            if !visited.is_marked(cur) && predicate(cur) {
+                // distance term (world)
+                let world = grid.cell_to_world(cur);
+                let dist = world.distance(start_world);
+
+                // info-gain term: count unvisited neighbors in a small radius
+                let gain = unvisited_count_in_radius(visited, cur, GAIN_RADIUS) as f32;
+
+                // alignment term
+                let dir = (world - start_world).normalize_or_zero();
+                let align = forward.dot(dir).clamp(0.0, 1.0);
+
+                let score = W_DIST * dist + W_GAIN * gain + W_ALIGN * align;
+
+                if best.map_or(true, |(s, _)| score > s) {
+                    best = Some((score, cur));
+                }
+            }
+
+            // BFS expand over reachable free cells
+            for n in neighbors4(cur) {
+                if !seen.contains(&n) && grid.get_cell(n) == Some(CellState::Free) {
+                    seen.insert(n);
+                    queue.push_back(n);
+                }
+            }
+        }
+    }
+
+    best.map(|(_, c)| c)
+}
+
+fn unvisited_count_in_radius(visited: &VisitedGrid, center: IVec2, r: i32) -> i32 {
+    let mut count = 0;
+    for dy in -r..=r {
+        for dx in -r..=r {
+            let off = IVec2::new(dx, dy);
+            // simple diamond / manhattan radius or circle; circle looks nicer:
+            if off.as_vec2().length() <= r as f32 {
+                let c = center + off;
+                if !visited.is_marked(c) {
+                    count += 1;
+                }
+            }
+        }
+    }
+    count
+}
+
+/* ---------------- Occupancy frontier (default) ---------------- */
 
 fn find_nearest_frontier_where(
     grid: &OccupancyGrid,
@@ -125,13 +252,9 @@ fn find_nearest_frontier_where(
     while let Some(current) = queue.pop_front() {
         let cell_state = grid.get_cell(current);
 
-        let is_frontier = if USE_VISITED_FRONTIERS {
-            !visited.is_marked(current) && predicate(current)
-        } else {
-            cell_state == Some(CellState::Free)
-                && has_unknown_neighbor(grid, current)
-                && predicate(current)
-        };
+        let is_frontier = cell_state == Some(CellState::Free)
+            && has_unknown_neighbor(grid, current)
+            && predicate(current);
 
         if is_frontier {
             return Some(current);
@@ -147,6 +270,8 @@ fn find_nearest_frontier_where(
 
     None
 }
+
+/* ---------------- Common helpers ---------------- */
 
 pub fn has_unknown_neighbor(grid: &OccupancyGrid, cell: IVec2) -> bool {
     neighbors4(cell)
@@ -193,6 +318,7 @@ pub fn distance_to_solid_or_edge(grid: &OccupancyGrid, cell: IVec2, scan_max: i3
         }
     }
 
+    // treat as very safe beyond scan range
     scan_max + 1
 }
 
