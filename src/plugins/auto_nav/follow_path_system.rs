@@ -47,6 +47,20 @@ pub fn follow_path_system(
             continue;
         };
 
+        // Check if the current path is still viable
+        let is_path_blocked = path
+            .cells
+            .iter()
+            .any(|cell| distance_to_solid_or_edge(grid, *cell, 0) == 0);
+
+        if is_path_blocked {
+            info!("[AutoNav] Path invalidated — removing PathPlan for replanning.");
+            cmd.linear = 0.0;
+            cmd.angular = 0.0;
+            commands.entity(entity).remove::<PathPlan>();
+            continue;
+        }
+
         // obtain target-pos of next cell we need to traverse to:
         let target_pos = grid.cell_to_world(*next_cell);
         let to_target = target_pos - pos;
