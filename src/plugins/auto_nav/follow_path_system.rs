@@ -1,10 +1,23 @@
 use crate::bundles::hero::HeroController;
 use crate::components::cmd_vel::CmdVel;
 use crate::components::occupancy_grid::OccupancyGrid;
+use crate::constants::HERO_RADIUS_PX;
 use crate::plugins::auto_nav::auto_nav_constants::*;
 use crate::plugins::auto_nav::plan_frontier_path_system::{distance_to_solid_or_edge, PathPlan};
 use crate::plugins::auto_nav::toggle_autonav_system::AutoNavMode;
 use bevy::prelude::*;
+
+#[derive(Component)]
+pub struct TemporaryDebugMarker;
+
+pub fn clear_debug_markers_system(
+    mut commands: Commands,
+    query: Query<Entity, With<TemporaryDebugMarker>>,
+) {
+    for e in &query {
+        commands.entity(e).despawn();
+    }
+}
 
 pub fn follow_path_system(
     mode: Res<AutoNavMode>,
@@ -39,16 +52,28 @@ pub fn follow_path_system(
         let to_target = target_pos - pos;
         let dist = to_target.length();
 
+        commands
+            .spawn(SpriteBundle {
+                sprite: Sprite {
+                    color: Color::RED,
+                    custom_size: Some(Vec2::splat(6.0)),
+                    ..default()
+                },
+                transform: Transform::from_translation(target_pos.extend(20.0)),
+                ..default()
+            })
+            .insert(TemporaryDebugMarker);
+
         info!(
             "[AutoNav] Following path: pos={:?}, target_cell={:?}, world_target={:?}, dist={:.2}",
             pos, next_cell, target_pos, dist
         );
 
         // check whether we have arrived at our target-cell, if so then pop the target-cell of our path and bail early:
-        const ARRIVE_RADIUS_CELLS: f32 = 0.4;
-        let arrive = ARRIVE_RADIUS_CELLS * grid.resolution;
+        // (we're happy for any part of the bot to be touching it, or within one grid-cell of it)
+        let arrive_radius_world = HERO_RADIUS_PX + grid.resolution;
 
-        if dist < arrive {
+        if dist < arrive_radius_world {
             info!(
                 "[AutoNav] Arrived at cell {:?}, remaining steps: {}",
                 next_cell,
@@ -86,15 +111,14 @@ pub fn follow_path_system(
         let best_dir = pick_best_heading(grid, pos, desired);
         let angle_raw = forward.angle_between(best_dir);
         let angle = angle_raw.clamp(-CMD_VEL_MAX_ANG, CMD_VEL_MAX_ANG);
-        let cross = forward.perp_dot(best_dir);
         let rotate_only = angle > 0.70 || !forward_clear_ok;
 
         info!(
-            "[AutoNav] Chosen dir: {:?}, angle_diff: {:.2}, cross: {:.2}, rotate_only: {}",
-            best_dir, angle, cross, rotate_only
+            "[AutoNav] Chosen dir: {:?}, angle_diff: {:.2}, rotate_only: {}",
+            best_dir, angle, rotate_only
         );
 
-        let ang_cmd = cross.signum() * angle;
+        let ang_cmd = angle;
         let lin_cmd = if rotate_only {
             0.0
         } else if angle > 0.35 {

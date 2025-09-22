@@ -11,7 +11,7 @@ pub const DIST_SCAN_MAX: i32 = 6;
 pub const AVOID_SAMPLE_DEGS: [f32; 5] = [-60.0, -30.0, 0.0, 30.0, 60.0];
 pub const AVOID_LOOKAHEAD_STEPS: i32 = 6;
 pub const AVOID_STEP_SIZE_CELLS: f32 = 0.6;
-pub const AVOID_REQUIRED_CLEARANCE: i32 = 2;
+pub const AVOID_REQUIRED_CLEARANCE: i32 = 1;
 pub const AVOID_FWD_CONE_DEG: f32 = 35.0;
 
 // A* weighting
