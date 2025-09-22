@@ -52,6 +52,7 @@ Run **Pick.e** in your browser:
 
 - LiDAR is idealised (no noise model yet).
 - Frontier planner is intentionally minimal.
+- Path traversal code needs further work - poor Pick.e sometimes gets stuck!
 - Deterministic (seeded) mode not yet enabled.
 - Its a simplistic 2D simulation - not intended a basis for a production tool.
 
