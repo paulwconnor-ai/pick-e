@@ -84,7 +84,8 @@ pub fn follow_path_system(
         );
 
         let best_dir = pick_best_heading(grid, pos, desired);
-        let angle = forward.angle_between(best_dir).clamp(0.0, CMD_VEL_MAX_ANG);
+        let angle_raw = forward.angle_between(best_dir);
+        let angle = angle_raw.clamp(-CMD_VEL_MAX_ANG, CMD_VEL_MAX_ANG);
         let cross = forward.perp_dot(best_dir);
         let rotate_only = angle > 0.70 || !forward_clear_ok;
 
