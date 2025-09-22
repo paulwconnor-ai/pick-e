@@ -18,5 +18,6 @@ mod app;
 mod bundles;
 mod components;
 mod constants;
+mod plugins;
 mod systems;
 mod ui;

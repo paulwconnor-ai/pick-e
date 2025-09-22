@@ -14,10 +14,19 @@ enum Phase {
     Fill,
 }
 
-#[derive(Resource, Clone, Copy, Debug, Default)]
+#[derive(Resource, Clone, Copy, Debug)]
 pub struct AutoNavMode {
     pub enabled: bool,
     pub phase: Phase,
+}
+
+impl Default for AutoNavMode {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            phase: Phase::WallSweep,
+        }
+    }
 }
 
 #[derive(Component)]

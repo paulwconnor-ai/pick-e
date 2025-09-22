@@ -29,3 +29,4 @@ dist/
 
 Cargo.toml
 TO-DO.md
+.cargo/config.toml

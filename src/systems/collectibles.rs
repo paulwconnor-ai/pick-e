@@ -210,7 +210,6 @@ pub fn collect_on_collision(
 
             commands.entity(collectible_entity).despawn();
             stats.collected += 1;
-            info!("🎉 Collected! Total: {}", stats.collected);
         }
     }
 }
