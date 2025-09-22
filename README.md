@@ -21,6 +21,10 @@ Run **Pick.e** in your browser:
 - Toggle Auto-Nav (on by default): M
 - Move: W/A/S/D (forwards, back, turn-left, turn-right)
 
+<div align="center">
+  <img src="./screenshot.png" alt="Pick.e screenshot" style="max-width: 800px; width: 100%; border-radius: 6px;" />
+</div>
+
 ---
 
 ## Current Features
@@ -82,14 +86,6 @@ The project reflects my own architecture and goals, implemented with assistive t
 - **Bevy** — Entity Component System game engine
 - **Rapier** — 2D physics and raycasting
 - **WebAssembly (WASM)** — for browser builds
-
----
-
-## Screenshot
-
-<div align="center">
-  <img src="./screenshot.png" alt="Pick.e screenshot" style="max-width: 800px; width: 100%; border-radius: 6px;" />
-</div>
 
 ---
 
