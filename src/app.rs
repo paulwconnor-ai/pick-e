@@ -4,11 +4,11 @@ use bevy::window::{Window, WindowPlugin};
 use bevy_rapier2d::prelude::*;
 
 use crate::components::collectible::CollectionStats;
+use crate::plugins::auto_nav::plugin::AutoNavPlugin;
 use crate::systems::collectibles::{
     collect_on_collision, flood_spawn_collectibles_from_map, CollectibleFloodState,
 };
 use crate::systems::level::{setup_level_loading, spawn_level};
-use crate::systems::robot::auto_nav::AutoNavPlugin;
 use crate::systems::robot::cmd_vel_drive::cmd_vel_to_velocity_system;
 use crate::systems::robot::input_keyboard::keyboard_control_system;
 use crate::systems::robot::lidar_sensor::{lidar_debug_draw_system, lidar_sensor_system};
