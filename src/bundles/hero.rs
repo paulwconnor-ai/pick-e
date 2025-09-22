@@ -5,7 +5,6 @@ use bevy_rapier2d::prelude::*;
 use crate::components::cmd_vel::CmdVel;
 use crate::components::lidar::*;
 use crate::components::occupancy_grid::OccupancyGrid;
-use crate::components::visited_grid::VisitedGrid;
 use crate::constants::*;
 
 /// Marker for input control
@@ -60,6 +59,5 @@ pub fn perception_bundle() -> impl Bundle {
             OCCUPANCY_GRID_RES,
             Vec2::new(-LOGICAL_H, -LOGICAL_W),
         ),
-        VisitedGrid::new(LOGICAL_W as usize, LOGICAL_H as usize),
     )
 }

@@ -1,7 +1,6 @@
 use crate::bundles::hero::HeroController;
 use crate::components::cmd_vel::CmdVel;
 use crate::components::occupancy_grid::OccupancyGrid;
-use crate::components::visited_grid::VisitedGrid;
 use crate::constants::HERO_RADIUS_PX;
 use crate::plugins::auto_nav::auto_nav_constants::*;
 use crate::plugins::auto_nav::plan_frontier_path_system::{distance_to_solid_or_edge, PathPlan};
@@ -29,8 +28,7 @@ pub fn follow_path_system(
             &mut CmdVel,
             &mut PathPlan,
             &GlobalTransform,
-            &OccupancyGrid,
-            &mut VisitedGrid,
+            &OccupancyGrid
         ),
         With<HeroController>,
     >,
@@ -39,7 +37,7 @@ pub fn follow_path_system(
         return;
     }
 
-    for (entity, mut cmd, mut path, xform, grid, mut visited) in query.iter_mut() {
+    for (entity, mut cmd, mut path, xform, grid) in query.iter_mut() {
         // get this bot's position, and check if it has any more path-cells to traverse:
         let pos = xform.translation().truncate();
         let Some(next_cell) = path.cells.first() else {
@@ -48,20 +46,6 @@ pub fn follow_path_system(
             cmd.angular = 0.0;
             continue;
         };
-
-        // mark current cell as visited:
-        let Some(current_cell) = grid.world_to_cell(pos) else {
-            continue;
-        };
-
-        let radius_cells = (HERO_RADIUS_PX / grid.resolution).ceil() as i32;
-        for dy in -radius_cells..=radius_cells {
-            for dx in -radius_cells..=radius_cells {
-                let offset = IVec2::new(dx, dy);
-                let cell = current_cell + offset;
-                visited.mark(cell);
-            }
-        }
 
         // Check if the current path is still viable
         let is_path_blocked = path
@@ -104,7 +88,6 @@ pub fn follow_path_system(
         let arrive_radius_world = HERO_RADIUS_PX + grid.resolution;
 
         if dist < arrive_radius_world {
-            visited.mark(*next_cell);
             info!(
                 "[AutoNav] Arrived at cell {:?}, remaining steps: {}",
                 next_cell,
