@@ -6,7 +6,7 @@ _A 2-day Rust + Bevy + Rapier learning project by Paul Connor_
 
 ## Purpose
 
-**Pick.e** is a small testbed created to learn **Rust**, **Bevy (ECS)**, and **Rapier (2D physics/raycasting)** from scratch over a single 2-day weekend.  
+Hello! **Pick.e** is a small testbed I created to learn **Rust**, **Bevy (ECS)**, and **Rapier (2D physics/raycasting)** from scratch over a single 2-day weekend.  
 The goal was to rapidly create a minimal robotics-themed simulation loop and UI, then use it to explore simplified robot LiDAR sensor-driven mapping and navigation.
 
 ---
@@ -14,7 +14,7 @@ The goal was to rapidly create a minimal robotics-themed simulation loop and UI,
 ## Try it
 
 Run **Pick.e** in your browser:
-[https://paulwconnor-ai.github.io/pick-e](https://paulwconnor-ai.github.io/pick-e)
+<a href="https://paulwconnor-ai.github.io/pick-e" target="_blank" rel="noopener noreferrer">pick‑e</a>
 
 ### Controls
 
