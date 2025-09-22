@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use std::collections::{HashMap, HashSet, VecDeque};
 
+use crate::bundles::hero::HeroController;
 use crate::components::occupancy_grid::{CellState, OccupancyGrid};
 use crate::plugins::auto_nav::constants::*;
 use crate::plugins::auto_nav::mode::{AutoNavMode, Phase};
@@ -14,33 +15,37 @@ pub struct PathPlan {
 pub fn plan_frontier_path_system(
     mut mode: ResMut<AutoNavMode>,
     mut commands: Commands,
-    query: Query<(Entity, &GlobalTransform, &OccupancyGrid)>,
-    has_path: Query<&PathPlan>,
+    query: Query<
+        (Entity, &GlobalTransform, &OccupancyGrid, Option<&PathPlan>),
+        With<HeroController>,
+    >,
 ) {
-    if !mode.enabled || has_path.iter().next().is_some() {
+    if !mode.enabled {
         return;
     }
 
-    for (entity, xform, grid) in query.iter() {
+    for (entity, xform, grid, maybe_path) in query.iter() {
+        if maybe_path.is_some() {
+            continue; // already has a plan
+        }
+
         let pos = xform.translation().truncate();
         let Some(start_cell) = grid.world_to_cell(pos) else {
             continue;
         };
 
         let target = match mode.phase {
-            Phase::WallSweep => {
+            Phase::WallSweep => find_nearest_frontier_where(grid, start_cell, |c| {
+                is_safe_cell(grid, c, SAFE_MARGIN_MIN)
+                    && is_wall_band_cell(grid, c, SAFE_MARGIN_MIN, WALL_BAND_MAX)
+            })
+            .or_else(|| {
+                mode.phase = Phase::Fill;
+                info!("[AutoNav] No wall-band frontiers; switching to Fill.");
                 find_nearest_frontier_where(grid, start_cell, |c| {
                     is_safe_cell(grid, c, SAFE_MARGIN_MIN)
-                        && is_wall_band_cell(grid, c, SAFE_MARGIN_MIN, WALL_BAND_MAX)
                 })
-                .or_else(|| {
-                    mode.phase = Phase::Fill;
-                    info!("[AutoNav] No wall-band frontiers; switching to Fill.");
-                    find_nearest_frontier_where(grid, start_cell, |c| {
-                        is_safe_cell(grid, c, SAFE_MARGIN_MIN)
-                    })
-                })
-            }
+            }),
             Phase::Fill => find_nearest_frontier_where(grid, start_cell, |c| {
                 is_safe_cell(grid, c, SAFE_MARGIN_MIN)
             }),
@@ -59,7 +64,7 @@ pub fn plan_frontier_path_system(
                 },
             ) {
                 commands.entity(entity).insert(PathPlan {
-                    cells: path.clone(),
+                    cells: path,
                     target: goal,
                 });
                 info!("[AutoNav:{:?}] Planned path to {:?}", mode.phase, goal);
@@ -132,7 +137,6 @@ pub fn distance_to_solid_or_edge(grid: &OccupancyGrid, cell: IVec2, scan_max: i3
         return 0;
     }
 
-    let mut best = scan_max + 1;
     for r in 1..=scan_max {
         for dy in -r..=r {
             let dx = r - dy.abs();
@@ -143,9 +147,10 @@ pub fn distance_to_solid_or_edge(grid: &OccupancyGrid, cell: IVec2, scan_max: i3
                 }
             }
         }
-        best = best.min(r);
     }
-    best
+
+    // No solid or edge within scan range; treat as very safe
+    scan_max + 1
 }
 
 fn in_bounds(grid: &OccupancyGrid, c: IVec2) -> bool {

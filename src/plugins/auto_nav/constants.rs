@@ -1,7 +1,6 @@
 // CmdVel outputs (dimensionless, expected range [-1.0, 1.0])
 pub const CMD_VEL_MAX_LIN: f32 = 0.85;
 pub const CMD_VEL_MAX_ANG: f32 = 1.0;
-pub const CELL_RADIUS: f32 = 8.0;
 
 // Safety / wall-band parameters
 pub const SAFE_MARGIN_MIN: i32 = 2;

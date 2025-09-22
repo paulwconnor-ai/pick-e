@@ -13,9 +13,5 @@ target
 # Trunk output folder
 dist/
 
-# These get auto-overwritten with target-specific version on build
-Cargo.toml
-.cargo/config.toml
-
 # Not for sharing
 TO-DO.md

@@ -4,7 +4,9 @@ set -e
 # Switch to native Cargo and .cargo config
 echo "⏳ Switching to native config..."
 cp Cargo_native.toml Cargo.toml
+mkdir -p .cargo
 cp .cargo/config_native.toml .cargo/config.toml
+mkdir -p target/debug
 cp -r assets target/debug/
 
 # Check for --build-only flag

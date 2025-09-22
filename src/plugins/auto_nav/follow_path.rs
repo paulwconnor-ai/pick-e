@@ -28,7 +28,11 @@ pub fn follow_path_system(
         let to_target = target_pos - pos;
         let dist = to_target.length();
 
-        if dist < CELL_RADIUS {
+        // Distance threshold for "arrived"; expressed in cells, scaled by grid.resolution at runtime.
+        const ARRIVE_RADIUS_CELLS: f32 = 0.4;
+
+        let arrive = ARRIVE_RADIUS_CELLS * grid.resolution;
+        if dist < arrive {
             path.cells.remove(0);
             if path.cells.is_empty() {
                 cmd.linear = 0.0;

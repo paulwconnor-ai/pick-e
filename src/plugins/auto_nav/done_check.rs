@@ -1,4 +1,5 @@
 use crate::bundles::hero::HeroController;
+use crate::components::cmd_vel::CmdVel;
 use crate::components::occupancy_grid::{CellState, OccupancyGrid};
 use crate::plugins::auto_nav::constants::*;
 use crate::plugins::auto_nav::mode::AutoNavMode;
@@ -8,13 +9,16 @@ use bevy::prelude::*;
 pub fn stop_when_done_system(
     mut commands: Commands,
     mode: Res<AutoNavMode>,
-    query: Query<(Entity, &OccupancyGrid, Option<&PathPlan>), With<HeroController>>,
+    mut query: Query<
+        (Entity, &mut CmdVel, &OccupancyGrid, Option<&PathPlan>),
+        With<HeroController>,
+    >,
 ) {
     if !mode.enabled {
         return;
     }
 
-    for (entity, grid, path) in query.iter() {
+    for (entity, mut cmd, grid, path) in query.iter_mut() {
         let mut has_frontier = false;
         for (cell, state) in grid.iter() {
             if state == CellState::Free
@@ -27,6 +31,9 @@ pub fn stop_when_done_system(
         }
 
         if !has_frontier {
+            // Stop motion and clear plan
+            cmd.linear = 0.0;
+            cmd.angular = 0.0;
             if path.is_some() {
                 commands.entity(entity).remove::<PathPlan>();
             }

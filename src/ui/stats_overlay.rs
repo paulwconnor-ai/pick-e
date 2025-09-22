@@ -1,5 +1,5 @@
 use crate::components::collectible::CollectionStats;
-use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy::text::{BreakLineOn, JustifyText};
 
@@ -71,14 +71,14 @@ fn setup_top_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn update_top_hud(
     mut q: Query<&mut Text, With<TopHudText>>,
     time: Res<Time>,
-    mut stats: ResMut<CollectionStats>,
+    stats: Res<CollectionStats>,
 ) {
     // TODO: replace these mocks with real data:
     // - explored_pct derived from your occupancy grid stats (cells visited, or similar)
 
     let collected = stats.collected;
     let total = stats.total;
-    let explored_pct = 0;
+    let explored_pct: f32 = 0.0;
 
     let sim = time.elapsed();
     let mins = (sim.as_secs() / 60) as u64;
@@ -87,7 +87,7 @@ fn update_top_hud(
     let mut text = q.single_mut();
     text.sections[0].value = format!(
         "Collected {}/{}   Explored {:.1}%   Time {:02}:{:02}",
-        collected, total, explored_pct, mins, secs
+        collected, total, explored_pct, mins, secs,
     );
 }
 

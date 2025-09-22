@@ -20,7 +20,6 @@ pub fn lidar_sensor_system(
         let start_angle = emitter.angle_cursor;
         let end_angle = start_angle + angle_delta;
 
-        #[cfg(debug_assertions)]
         emitter.hits.clear();
 
         let mut angle = start_angle;
@@ -48,14 +47,24 @@ pub fn lidar_sensor_system(
                 None => LIDAR_MAX_RANGE_PX,
             };
 
+            // Always push a hit; only the debug payload is cfg-gated
             #[cfg(debug_assertions)]
-            emitter.hits.push(LidarHit {
-                angle_deg: angle % 360.0,
-                distance,
-                debug: DebugHitInfo {
-                    hit_point: origin + dir * distance,
-                },
-            });
+            {
+                emitter.hits.push(LidarHit {
+                    angle_deg: angle % 360.0,
+                    distance,
+                    debug: DebugHitInfo {
+                        hit_point: origin + dir * distance,
+                    },
+                });
+            }
+            #[cfg(not(debug_assertions))]
+            {
+                emitter.hits.push(LidarHit {
+                    angle_deg: angle % 360.0,
+                    distance,
+                });
+            }
 
             angle += LIDAR_ANGLE_STEP;
         }

@@ -256,6 +256,7 @@ fn spawn_collider(
     let half_h = h as f32 * tile_size / 2.0;
 
     commands.spawn((
+        RigidBody::Fixed,
         Collider::cuboid(half_w, half_h),
         Transform::from_translation(world_pos),
         GlobalTransform::default(),

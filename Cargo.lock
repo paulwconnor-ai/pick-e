@@ -2924,7 +2924,6 @@ dependencies = [
  "bevy",
  "bevy_embedded_assets",
  "bevy_rapier2d",
- "console_error_panic_hook",
  "image",
  "rand",
  "uuid",
