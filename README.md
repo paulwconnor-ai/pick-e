@@ -14,7 +14,7 @@ The goal was to rapidly create a minimal robotics-themed simulation loop and UI,
 ## Try it
 
 Run **Pick.e** in your browser:
-<a href="https://paulwconnor-ai.github.io/pick-e" target="_blank" rel="noopener noreferrer">pick‑e</a>
+<a href="https://paulwconnor-ai.github.io/pick-e" target="_blank" rel="noopener noreferrer">https://paulwconnor-ai.github.io/pick-e</a>
 
 ### Controls
 
