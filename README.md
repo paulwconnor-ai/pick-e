@@ -4,40 +4,26 @@ _A 2-day Rust + Bevy + Rapier learning project by Paul Connor_
 
 ---
 
-## What is Pick.e?
+## Purpose
 
-**Pick.e** is a minimal 2D robot simulation created over a single weekend to explore game-style robotics logic using modern Rust tools.  
-It features a curious little warehouse bot who can explore his environment using **LiDAR**, build a memory of what he’s seen, and collect objects scattered around the map.
-
-This was my **first time using Rust, Bevy, Rapier, and WebAssembly**, and I built everything from scratch in just 2 days — including all code, visuals, and ECS architecture.
-
-_ChatGPT provided help with learning Rust syntax, Bevy usage and file-structure practices, and code fixes — but all logic and integration was mine._
+**Pick.e** is a small testbed created to learn **Rust**, **Bevy (ECS)**, and **Rapier (2D physics/raycasting)** from scratch over a single 2-day weekend.  
+The goal was to rapidly create a minimal robotics-themed simulation loop and UI, then use it to explore simplified robot LiDAR sensor-driven mapping and navigation.
 
 ---
 
-## 🚀 Project Goals
+## Try it
 
-- Learn and use Rust in a simified robotics simulation context
-- Understand Bevy's ECS model and real-time UI/rendering
-- Use raycasts for simulating LiDAR in a 2D world
-- Implement simple memory and fog-of-war
-- Add collectible parcels and score tracking
-- Explore auto-navigation behaviour
+Run **Pick.e** in your browser:
+[https://paulwconnor-ai.github.io/pick-e](https://paulwconnor-ai.github.io/pick-e)
 
-This isn't a polished game — it's a hands-on **robotics sandbox** and learning exercise.
+### Controls
 
----
-
-## 🔧 Tech Stack
-
-- **Rust**
-- [Bevy](https://bevyengine.org/) — Entity Component System (ECS) game engine
-- [Rapier](https://rapier.rs/) — Physics + Raycasting for LiDAR
-- **WebAssembly (WASM)** — Targeting browser play (via GitHub Pages)
+- Toggle Auto-Nav (on by default): M
+- Move: W/A/S/D (forwards, back, turn-left, turn-right)
 
 ---
 
-## 🎮 Current Features
+## Current Features
 
 - Top-down 2D map with walkable and blocked areas
 - Manual WASD robot control
@@ -53,31 +39,60 @@ This isn't a polished game — it's a hands-on **robotics sandbox** and learning
 ## Planned Features
 
 - Further develop navigation to allow all pickups to be collected
+- Evaluate performance, simulation determinism, and modularity to prepare for scaling up to multi-agent testing
+- Consider adding further simple metrics to track navigation efficiency, collisions, mapping coverage, and pickup success rate
 
 ---
 
-## 🖼️ Screenshots
+## Known limitations
 
-<img src="./screenshot.png" alt="screenshot" style="width: 50%;"/>
-
----
-
-## 📦 Try It (coming soon)
-
-Click here to run **Pick.e** in your browser!
+- LiDAR is idealised (no noise model yet).
+- Frontier planner is intentionally minimal.
+- Deterministic (seeded) mode not yet enabled.
 
 ---
 
-## 👨‍🔬 Author & Acknowledgements
+## Architecture at a Glance
 
-Built in a single weekend by **Paul Connor** ([@paulwconnor-ai](https://github.com/paulwconnor-ai))  
-with help and code suggestions from **ChatGPT**.
-
-All design, debugging, and architectural choices were mine.
-ChatGPT helped accelerate things but didn't write the project.
+- **ECS** (Bevy): game loop, scheduling, systems
+- **Physics/Raycast** (Rapier): LiDAR beams, simple collisions
+- **Robot Core**: `CmdVel` (intent), `DiffDrive` (motion), `Pose`
+- **Perception**: LiDAR system → hit points → occupancy grid update
+- **Mapping/Memory**: occupancy grid (derived from LiDAR data)
+- **Auto-Nav**: frontier exploration → path plan → follow
+- **UI**: stats overlay (perf + simple sim metrics)
 
 ---
 
-## ⚖️ License
+## Scope and authorship
 
-Apache 2.0
+This was an intentionally collaborative, time-boxed learning project:
+
+- **Paul Connor (me):** defined the project structure and learning goals; specified all behaviours and systems; integrated and iterated on every change; tested and debugged the simulation end-to-end. I approached it from a simulation and robotics design perspective, drawing on 20+ years of professional experience with C++/C#-based engines (including Unreal, Unity, and proprietary ECS-based engines).
+
+- **ChatGPT:** assisted by producing idiomatic Rust/Bevy code to match my specifications, helping me rapidly explore engine patterns, Bevy’s ECS model, and Rust conventions. This allowed me to focus on architecture, data flow, and robotics logic while learning the stack efficiently.
+
+The project reflects my own architecture and goals, implemented with assistive tooling to accelerate fluency in a new ecosystem.
+
+---
+
+## Tech stack
+
+- **Rust**
+- **Bevy** — Entity Component System game engine
+- **Rapier** — 2D physics and raycasting
+- **WebAssembly (WASM)** — for browser builds
+
+---
+
+## Screenshot
+
+<div align="center">
+  <img src="./screenshot.png" alt="Pick.e screenshot" style="max-width: 800px; width: 100%; border-radius: 6px;" />
+</div>
+
+---
+
+## License
+
+Apache-2.0
