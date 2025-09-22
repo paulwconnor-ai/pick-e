@@ -33,7 +33,7 @@ fn setup_credits_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
             NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    bottom: Val::Px(3.0),
+                    bottom: Val::Px(0.0),
                     left: Val::Px(0.0),
                     right: Val::Px(0.0),
                     justify_content: JustifyContent::Center,
@@ -54,7 +54,7 @@ fn setup_credits_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                     "Pick.e",
                     TextStyle {
                         font: font.clone(),
-                        font_size: 64.0,
+                        font_size: 58.0,
                         color: Color::rgb(0.5, 0.5, 0.8),
                     },
                 )
@@ -67,7 +67,7 @@ fn setup_credits_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                 "created by Paul Connor in 2 days as a Rust/Bevy/Rapier",
                 TextStyle {
                     font: font.clone(),
-                    font_size: 18.0,
+                    font_size: 14.0,
                     color: Color::rgb(0.1, 0.1, 0.4),
                 },
             )
@@ -75,6 +75,16 @@ fn setup_credits_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
 
             parent.spawn((TextBundle::from_section(
                 "learning exercise (see README.md for more info)",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 14.0,
+                    color: Color::rgb(0.1, 0.1, 0.4),
+                },
+            )
+            .with_text_justify(JustifyText::Center),));
+
+            parent.spawn((TextBundle::from_section(
+                "You can press M to toggle autopilot - use WASD keys to drive yourself.",
                 TextStyle {
                     font,
                     font_size: 18.0,
