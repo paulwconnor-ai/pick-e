@@ -29,14 +29,14 @@ Run **Pick.e** in your browser:
 
 ## Current Features
 
-- Top-down 2D map with walkable and blocked areas
-- Manual WASD robot control
+- Top-down 2D map with walkable and blocked areas (collision inferred from beauty texture)
 - Raycast-based simulated LiDAR sensor
 - Real-time occupancy-grid-based mapping from LiDAR
-- UI overlay with stats and performance info
-- Pickups that disappear when touched
 - Autonomous nav mode using frontier exploration
+- Pickups that disappear when touched
+- UI overlay with stats and performance info
 - Web demo hosted via GitHub Pages
+- Optional Manual WASD robot control (press M to toggle auto-nav, WASD to control)
 
 ---
 
@@ -53,6 +53,7 @@ Run **Pick.e** in your browser:
 - LiDAR is idealised (no noise model yet).
 - Frontier planner is intentionally minimal.
 - Deterministic (seeded) mode not yet enabled.
+- Its a simplistic 2D simulation - not intended a basis for a production tool.
 
 ---
 
