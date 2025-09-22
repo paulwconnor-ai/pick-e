@@ -19,6 +19,8 @@ pub fn clear_debug_markers_system(
     }
 }
 
+const ENABLE_DEBUG_INFO: bool = false;
+
 pub fn follow_path_system(
     mode: Res<AutoNavMode>,
     mut commands: Commands,
@@ -28,7 +30,7 @@ pub fn follow_path_system(
             &mut CmdVel,
             &mut PathPlan,
             &GlobalTransform,
-            &OccupancyGrid
+            &OccupancyGrid,
         ),
         With<HeroController>,
     >,
@@ -41,7 +43,9 @@ pub fn follow_path_system(
         // get this bot's position, and check if it has any more path-cells to traverse:
         let pos = xform.translation().truncate();
         let Some(next_cell) = path.cells.first() else {
-            info!("[AutoNav] No path cells left — stopping.");
+            if ENABLE_DEBUG_INFO {
+                info!("[AutoNav] No path cells left — stopping.");
+            }
             cmd.linear = 0.0;
             cmd.angular = 0.0;
             continue;
@@ -54,7 +58,9 @@ pub fn follow_path_system(
             .any(|cell| distance_to_solid_or_edge(grid, *cell, 0) == 0);
 
         if is_path_blocked {
-            info!("[AutoNav] Path invalidated — removing PathPlan for replanning.");
+            if ENABLE_DEBUG_INFO {
+                info!("[AutoNav] Path invalidated — removing PathPlan for replanning.");
+            }
             cmd.linear = 0.0;
             cmd.angular = 0.0;
             commands.entity(entity).remove::<PathPlan>();
@@ -78,24 +84,30 @@ pub fn follow_path_system(
             })
             .insert(TemporaryDebugMarker);
 
-        info!(
+        if ENABLE_DEBUG_INFO {
+            info!(
             "[AutoNav] Following path: pos={:?}, target_cell={:?}, world_target={:?}, dist={:.2}",
             pos, next_cell, target_pos, dist
         );
+        }
 
         // check whether we have arrived at our target-cell, if so then pop the target-cell of our path and bail early:
         // (we're happy for any part of the bot to be touching it, or within one grid-cell of it)
         let arrive_radius_world = HERO_RADIUS_PX + grid.resolution;
 
         if dist < arrive_radius_world {
-            info!(
-                "[AutoNav] Arrived at cell {:?}, remaining steps: {}",
-                next_cell,
-                path.cells.len().saturating_sub(1)
-            );
+            if ENABLE_DEBUG_INFO {
+                info!(
+                    "[AutoNav] Arrived at cell {:?}, remaining steps: {}",
+                    next_cell,
+                    path.cells.len().saturating_sub(1)
+                );
+            }
             path.cells.remove(0);
             if path.cells.is_empty() {
-                info!("[AutoNav] Path complete — removing PathPlan.");
+                if ENABLE_DEBUG_INFO {
+                    info!("[AutoNav] Path complete — removing PathPlan.");
+                }
                 cmd.linear = 0.0;
                 cmd.angular = 0.0;
 
@@ -117,20 +129,25 @@ pub fn follow_path_system(
             AVOID_FWD_CONE_DEG,
             AVOID_REQUIRED_CLEARANCE,
         );
-        info!(
-            "[AutoNav] Forward clear: {} | Forward dir: {:?} | Desired dir: {:?}",
-            forward_clear_ok, forward, desired
-        );
+
+        if ENABLE_DEBUG_INFO {
+            info!(
+                "[AutoNav] Forward clear: {} | Forward dir: {:?} | Desired dir: {:?}",
+                forward_clear_ok, forward, desired
+            );
+        }
 
         let best_dir = pick_best_heading(grid, pos, desired);
         let angle_raw = forward.angle_between(best_dir);
         let angle = angle_raw.clamp(-CMD_VEL_MAX_ANG, CMD_VEL_MAX_ANG);
         let rotate_only = angle > 0.70 || !forward_clear_ok;
 
-        info!(
-            "[AutoNav] Chosen dir: {:?}, angle_diff: {:.2}, rotate_only: {}",
-            best_dir, angle, rotate_only
-        );
+        if ENABLE_DEBUG_INFO {
+            info!(
+                "[AutoNav] Chosen dir: {:?}, angle_diff: {:.2}, rotate_only: {}",
+                best_dir, angle, rotate_only
+            );
+        }
 
         let ang_cmd = angle;
         let lin_cmd = if rotate_only {
@@ -146,10 +163,12 @@ pub fn follow_path_system(
         cmd.linear = lin_cmd;
         cmd.angular = ang_cmd;
 
-        info!(
-            "[AutoNav] CmdVel: linear = {:.2}, angular = {:.2}",
-            lin_cmd, ang_cmd
-        );
+        if ENABLE_DEBUG_INFO {
+            info!(
+                "[AutoNav] CmdVel: linear = {:.2}, angular = {:.2}",
+                lin_cmd, ang_cmd
+            );
+        }
     }
 }
 

@@ -95,14 +95,7 @@ pub fn plan_frontier_path_system(
                 }
 
                 // Insert path
-                commands.entity(entity).insert(PathPlan {
-                    cells: path
-                });
-
-                info!(
-                    "[AutoNav: Frontier] Planned to {:?} from {:?}",
-                    goal, start_cell
-                );
+                commands.entity(entity).insert(PathPlan { cells: path });
             }
         } else {
             // No valid frontier found — reset the grid's explored area (keep solids)
