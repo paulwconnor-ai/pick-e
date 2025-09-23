@@ -50,6 +50,7 @@ Run **Pick.e** in your browser:
 
 ## Known limitations
 
+- In a real simulation case, I would prefer to use the software of the actual robot - e.g. the Bevy-based hardware/world-simulator might instead tightly integrate with the actual ROS/other robot perception/control software.
 - LiDAR is idealised (no noise model yet).
 - Frontier planner is intentionally minimal.
 - Path traversal code needs further work - poor Pick.e sometimes gets stuck!
