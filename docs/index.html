@@ -5,8 +5,8 @@
     <title>Pick.e Demo</title>
     
 <script type="module">
-import init, * as bindings from './pick-e-4eb83d470d2ab3a9.js';
-const wasm = await init({ module_or_path: './pick-e-4eb83d470d2ab3a9_bg.wasm' });
+import init, * as bindings from '/pick-e-36264c7f2265501b.js';
+const wasm = await init({ module_or_path: '/pick-e-36264c7f2265501b_bg.wasm' });
 
 
 window.wasmBindings = bindings;
@@ -43,7 +43,7 @@ dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
         display: block;
       }
     </style>
-  <link rel="modulepreload" href="./pick-e-4eb83d470d2ab3a9.js" crossorigin="anonymous" integrity="sha384-kniybq4HdDd3EvCytvE1nMaMtUp+lGA8ndnNMNFGF2qCbtyQr2rMkrYmdlm2FkmN"><link rel="preload" href="./pick-e-4eb83d470d2ab3a9_bg.wasm" crossorigin="anonymous" integrity="sha384-6FX1tysi3x5iBkXwyIi/8O8lDJ9UsyXvF6FxYFd0ibJcogu8Szd3z5NyC1xDkJJN" as="fetch" type="application/wasm"></head>
+  <link rel="modulepreload" href="/pick-e-36264c7f2265501b.js" crossorigin="anonymous" integrity="sha384-kFFRuTDD6AvaHMn35cAPmsn7NMUem1d+ejYHsG1i7z8yX7e7VZDknstLuHDnohQn"><link rel="preload" href="/pick-e-36264c7f2265501b_bg.wasm" crossorigin="anonymous" integrity="sha384-s9kjHq04NKKAJKjOdjFRBZ2/vEVqaegUYg1gofHiWhsdDzoZQ/7Rq4K2FmhjE9+X" as="fetch" type="application/wasm"></head>
   <body>
     <div class="app-container">
       <canvas id="bevy-canvas"></canvas>
