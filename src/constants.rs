@@ -42,7 +42,7 @@ pub const LIDAR_MAX_RANGE_PX: f32 = LIDAR_MAX_RANGE_METERS / METERS_PER_PIXEL;
 // ===================
 
 // resolution in pixels (i.e. our world-coords) of our grid
-pub const OCCUPANCY_GRID_RES: f32 = 20.0;
+pub const OCCUPANCY_GRID_RES: f32 = 10.0;
 
 /// Beyond this distance, we treat LIDAR readings as inconclusive.
 pub const OCCUPANCY_ASSUMED_MAX_LIDAR_RANGE_PX: f32 = 0.9 * LIDAR_MAX_RANGE_PX; // (cheating a bit by coupling - but not using directly)

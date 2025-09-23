@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashSet, VecDeque};
 
 use crate::bundles::hero::HeroController;
 use crate::components::occupancy_grid::{CellState, OccupancyGrid};
@@ -216,30 +216,39 @@ fn astar_with_policy(
     policy: PathPolicy,
 ) -> Option<Vec<IVec2>> {
     use std::cmp::Ordering;
-    use std::collections::BinaryHeap;
+    use std::collections::{BinaryHeap, HashMap};
 
+    // Each node stores its position, g-cost, and f-cost
     #[derive(Copy, Clone, Eq, PartialEq)]
     struct Node {
         pos: IVec2,
-        g: i32,
-        f: i32,
+        g: i32, // cost from start to this node
+        f: i32, // estimated total cost (g + heuristic)
     }
 
+    // Reverse the order for min-heap behavior
     impl Ord for Node {
         fn cmp(&self, other: &Self) -> Ordering {
             other.f.cmp(&self.f)
         }
     }
+
     impl PartialOrd for Node {
         fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
             Some(self.cmp(other))
         }
     }
 
+    // Priority queue (min-heap) of nodes to explore
     let mut open = BinaryHeap::new();
+
+    // Path reconstruction: map from node -> where we came from
     let mut came: HashMap<IVec2, IVec2> = HashMap::new();
+
+    // Tracks the best-known cost to reach each node
     let mut g_score: HashMap<IVec2, i32> = HashMap::new();
 
+    // Start node
     open.push(Node {
         pos: start,
         g: 0,
@@ -248,6 +257,7 @@ fn astar_with_policy(
     g_score.insert(start, 0);
 
     while let Some(Node { pos, g, .. }) = open.pop() {
+        // Goal reached — reconstruct and return path
         if pos == goal {
             let mut path = vec![pos];
             let mut cur = pos;
@@ -259,24 +269,30 @@ fn astar_with_policy(
             return Some(path);
         }
 
+        // Check each 4-connected neighbor
         for nb in neighbors4(pos) {
+            // Only consider free cells
             if grid.get_cell(nb) != Some(CellState::Free) {
                 continue;
             }
 
-            // Safety gate
+            // Safety check — skip if too close to walls/edges
             let dist = distance_to_solid_or_edge(grid, nb, DIST_SCAN_MAX);
             if policy.avoid_unsafe && dist < policy.safe_min {
                 continue;
             }
 
-            // Step cost + band preference (only for original wallsweep mode)
+            // Base movement cost = 1
             let mut step = 1;
+
+            // If preferring a safety band, penalize out-of-band moves
             if policy.prefer_band && !(dist >= policy.safe_min && dist <= policy.band_max) {
                 step += COST_NON_BAND_PENALTY;
             }
 
             let tentative = g + step;
+
+            // If this is a better path to neighbor, update and push to heap
             if tentative < *g_score.get(&nb).unwrap_or(&i32::MAX) {
                 came.insert(nb, pos);
                 g_score.insert(nb, tentative);
@@ -291,6 +307,7 @@ fn astar_with_policy(
         }
     }
 
+    // No path found
     None
 }
 

@@ -82,13 +82,4 @@ impl OccupancyGrid {
     pub fn cell_to_world(&self, cell: IVec2) -> Vec2 {
         self.origin + (cell.as_vec2() + Vec2::splat(0.5)) * self.resolution
     }
-
-    /// New: iterate over all (cell, state) pairs
-    pub fn iter(&self) -> impl Iterator<Item = (IVec2, CellState)> + '_ {
-        self.cells.iter().enumerate().map(move |(i, state)| {
-            let x = (i % self.width) as i32;
-            let y = (i / self.width) as i32;
-            (IVec2::new(x, y), *state)
-        })
-    }
 }

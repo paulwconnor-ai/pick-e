@@ -1,7 +1,6 @@
 use super::{
     follow_path_system::{clear_debug_markers_system, follow_path_system},
     plan_frontier_path_system::plan_frontier_path_system,
-    stop_when_done_system::stop_when_done_system,
     toggle_autonav_system::{toggle_autonav_system, AutoNavMode},
 };
 use bevy::prelude::*;
@@ -58,7 +57,6 @@ impl Plugin for AutoNavPlugin {
             .add_systems(PreUpdate, clear_debug_markers_system)
             .add_systems(Update, toggle_autonav_system)
             .add_systems(Update, plan_frontier_path_system)
-            .add_systems(Update, follow_path_system)
-            .add_systems(Update, stop_when_done_system);
+            .add_systems(Update, follow_path_system);
     }
 }
