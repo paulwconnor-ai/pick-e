@@ -1,5 +1,5 @@
 [build]
-rustflags = ["-C", "force-frame-pointers=yes"]
+rustflags = ["--cfg", "getrandom_backend=\"wasm_js\""]
 
 [profile.dev]
 debug = 2
