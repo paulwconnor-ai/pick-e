@@ -98,7 +98,7 @@ pub fn follow_path_system(
         if dist < arrive_radius_world {
             if ENABLE_DEBUG_INFO {
                 info!(
-                    "[AutoNav] Arrived at cell {:?}, remaining steps: {}",
+                    "[AutoNav] Arrived at cell {:?} remaining steps: {}",
                     next_cell,
                     path.cells.len().saturating_sub(1)
                 );

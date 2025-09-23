@@ -84,7 +84,7 @@ fn setup_credits_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
             .with_text_justify(JustifyText::Center),));
 
             parent.spawn((TextBundle::from_section(
-                "You can press M to toggle autopilot - use WASD keys to drive yourself.",
+                "You can press M to toggle autopilot - use WASD keys to drive yourself. (v0.1)",
                 TextStyle {
                     font,
                     font_size: 18.0,
