@@ -111,7 +111,7 @@ pub fn follow_path_system(
                 cmd.linear = 0.0;
                 cmd.angular = 0.0;
 
-                // Remove the component to allow replanning
+                // Remove the component - to allow replanning
                 // You’ll need access to `Entity` and `Commands`
                 commands.entity(entity).remove::<PathPlan>();
             }
